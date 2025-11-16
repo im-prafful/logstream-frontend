@@ -1,30 +1,73 @@
-# LogStream - Frontend Dashboard 📊
+# React + TypeScript + Vite
 
-The Next.js and Tailwind CSS frontend dashboard for the LogStream observability platform.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-This repository contains the complete user interface for LogStream. It provides developers with a powerful and intuitive dashboard to search logs, visualize data trends, and manage alert rules.
+Currently, two official plugins are available:
 
----
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
+## React Compiler
 
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-### Key Features
+## Expanding the ESLint configuration
 
-- **Real-Time Search**: A powerful interface for searching and filtering logs across all services.
-- **Interactive Visualizations**: Rich charts and graphs (built with Recharts/ECharts) to visualize log volumes and patterns.
-- **Alert Management**: A dedicated UI for creating, viewing, and managing custom alert rules.
-- **Responsive Design**: Fully responsive layout built with Tailwind CSS for use on any device.
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-### Tech Stack
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-- **Framework**: Next.js (React with TypeScript)
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui or Mantine
-- **Data Visualization**: Recharts / ECharts
-- **Hosting**: Vercel or AWS Amplify
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
----
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
-### Getting Started
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-_Instructions for local setup, environment variables, and running the development server will be added here._
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
