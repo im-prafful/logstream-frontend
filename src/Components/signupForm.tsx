@@ -10,12 +10,55 @@ interface FormData {
   name: string;
 }
 
+const bannedWordList = ["admin", "root", "null", "void", "fuck", "shit"];
+const specialCharList = "!@#$%^&*()_+-=[]{}|;':\",.<>/?";
+
 const SignupForm: React.FC<Props> = ({ onClose }) => {
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
     name: ""
   });
+
+  const [errors, setErrors] = useState<Partial<FormData>>({});
+
+  const upperCaseCheck = (s : string) => s.split("").some(char => char >= 'A' && char <= 'Z');
+  const specialCharCheck = (s : string) =>  s.split("").some(char => (specialCharList).includes(char));
+
+  const validate = (): Partial<FormData> => {
+    const newErrors: Partial<FormData> = {};
+    // Email Validation
+
+
+    // Name Validation (Vulgarity & Length)
+
+
+    // Password Validation
+    const { password } = formData;
+    const newName = formData?.name?.split(" ").join("").toLowerCase();
+    const newEmail = formData?.email?.split(" ").join("").toLowerCase();
+
+    if (!password) {
+     newErrors.password = "Password is required";
+    }
+    if (password.length < 8) {
+     newErrors.password = "Minimum 8 characters required";
+    }
+    if (!upperCaseCheck(password)) {
+     newErrors.password = "Must contain at least 1 uppercase letter";
+    }
+    if (!specialCharCheck(password)) {
+      newErrors.password = "Must contain at least 1 special character";
+    }
+    if (
+      (formData.name && formData.password.toLowerCase().includes(newName))
+      || (formData.email && formData.password.toLowerCase().includes(newEmail))
+    ) {
+      newErrors.password = "Password can not be same as your username or email";
+    }
+    setErrors(newErrors);
+    return newErrors;
+  };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,7 +71,11 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Submitted:", formData);
+    const check = validate();
+    if (!check) {
+      console.log("Submitted:", formData);
+    }
+    console.log("Error:", check);
   };
 
   return (
@@ -87,7 +134,7 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
             Password
           </label>
           <input
-            type="password"
+            type="text"
             name="password"
             value={formData.password}
             onChange={handleChange}
