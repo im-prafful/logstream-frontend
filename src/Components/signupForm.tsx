@@ -10,7 +10,13 @@ interface FormData {
   name: string;
 }
 
-const bannedWordList = ["admin", "root", "null", "void", "fuck", "shit"];
+const bannedWordList = [
+  "admin", "administrator", "root", "system", "sys", "null", "void",
+  "test", "testing", "guest", "user", "default",
+  "password", "pass", "pwd", "qwerty", "letmein", "access",
+  "owner", "master", "superuser",
+  "fuck", "shit", "bitch", "asshole", "idiot"
+];
 const specialCharList = "!@#$%^&*()_+-=[]{}|;':\",.<>/?";
 
 const SignupForm: React.FC<Props> = ({ onClose }) => {
@@ -25,13 +31,48 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
   const upperCaseCheck = (s : string) => s.split("").some(char => char >= 'A' && char <= 'Z');
   const specialCharCheck = (s : string) =>  s.split("").some(char => (specialCharList).includes(char));
 
-  const validate = (): Partial<FormData> => {
+  const validate = (): boolean => {
     const newErrors: Partial<FormData> = {};
-    // Email Validation
-
+    let isValid = true;    
 
     // Name Validation (Vulgarity & Length)
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+      isValid = false;
+    } else {
+      const foundBadWord = bannedWordList.find(word => 
+        formData.name.toLowerCase().includes(word)
+      );
+      if (foundBadWord) {
+        newErrors.name = "Username contains restricted words.";
+        isValid = false;
+      }
+    }
 
+    // Email Validation
+    const { email } = formData;
+    const atIndex = email.indexOf("@");
+    const lastDotIndex = email.lastIndexOf(".");
+    
+    if (!email) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    } else if (
+        !email.includes("@") || 
+        atIndex === 0 || 
+        atIndex === email.length - 1 || 
+        lastDotIndex < atIndex ||
+        email.includes(" ")
+    ) {
+      newErrors.email = "Please enter a valid email address.";
+      isValid = false;
+    } else {
+      const localPart = email.split("@")[0];
+      if (localPart.endsWith(".com") || localPart.endsWith(".net") || localPart.endsWith(".org")) {
+        newErrors.email = "Username part of email cannot look like a domain.";
+        isValid = false;
+      }
+    }
 
     // Password Validation
     const { password } = formData;
@@ -39,29 +80,37 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
     const newEmail = formData?.email?.split(" ").join("").toLowerCase();
 
     if (!password) {
-     newErrors.password = "Password is required";
+      newErrors.password = "Password is required";
+      isValid = false;
     }
     if (password.length < 8) {
-     newErrors.password = "Minimum 8 characters required";
+      newErrors.password = "Minimum 8 characters required";
+      isValid = false;
     }
     if (!upperCaseCheck(password)) {
-     newErrors.password = "Must contain at least 1 uppercase letter";
+      newErrors.password = "Must contain at least 1 uppercase letter";
+      isValid = false;
     }
     if (!specialCharCheck(password)) {
       newErrors.password = "Must contain at least 1 special character";
+      isValid = false;
     }
     if (
       (formData.name && formData.password.toLowerCase().includes(newName))
       || (formData.email && formData.password.toLowerCase().includes(newEmail))
     ) {
       newErrors.password = "Password can not be same as your username or email";
+      isValid = false;
     }
     setErrors(newErrors);
-    return newErrors;
+    return isValid;
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    if (errors[name as keyof FormData]) {
+        setErrors(prev => ({ ...prev, [name]: "" }));
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -71,11 +120,9 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const check = validate();
-    if (!check) {
-      console.log("Submitted:", formData);
+    if (validate()) {
+        console.log("Submitted:", formData);
     }
-    console.log("Error:", check);
   };
 
   return (
@@ -106,9 +153,12 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
             value={formData.name}
             onChange={handleChange}
             placeholder="John Doe"
-            className="shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${
+                errors.name ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
+            }`}
             required
           />
+          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
         </div>
 
 
@@ -123,9 +173,12 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
             value={formData.email}
             onChange={handleChange}
             placeholder="your@email.com"
-            className="shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${
+                errors.email ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
+            }`}
             required
           />
+          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
         </div>
 
         {/* Password */}
@@ -134,14 +187,17 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
             Password
           </label>
           <input
-            type="text"
+            type="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
             placeholder="********"
-            className="shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${
+                errors.password ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
+            }`}
             required
           />
+          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
         </div>
 
         <button
