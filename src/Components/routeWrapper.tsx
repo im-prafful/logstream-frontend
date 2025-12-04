@@ -7,7 +7,7 @@ export const LoginRouteWrapper = () => {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-indigo-100">
-      <LoginForm onClose={() => navigate('/')} />
+        <LoginForm onClose={() => navigate('/')}/>        
     </div>
   );
 };
