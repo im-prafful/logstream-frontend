@@ -1,4 +1,6 @@
+import axios from "axios";
 import React, { useState, type ChangeEvent, type FormEvent } from "react";
+// import { useNavigate } from "react-router-dom";
 
 interface Props {
   onClose: () => void;
@@ -8,6 +10,8 @@ interface LoginData {
   email: string;
   password: string;
 }
+
+// const navigate = useNavigate();
 
 const LoginForm: React.FC<Props> = ({ onClose }) => {
   const [loginData, setLoginData] = useState<LoginData>({
@@ -23,10 +27,31 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
     }));
   };
 
+  const fetchData = async () => {
+  try {
+    const response = await axios.post('https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/login', {
+      email: loginData.email,
+      password: loginData.password,
+    });
+
+    console.log(response.data);
+    
+  } catch (e: any) {
+      // FIX: Handle errors here
+      if (e.response && e.response.status === 401) {
+        alert("Invalid Email or Password");
+      } else {
+        console.log("Something went wrong. Please try again.");
+        console.error("Login Error:", e);
+      }
+    }
+};
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Login:", loginData);
-  };
+    fetchData();
+
+  }
 
   const handleGuestLogin = () => {
     console.log("Guest Login Triggered");

@@ -6,6 +6,7 @@ import './index.css'
 // Import Components
 import App from './App'
 import { LoginRouteWrapper, SignupRouteWrapper } from './Components/routeWrapper'
+import {Home} from './home'
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
   {
     path: "/signup",
     element: <SignupRouteWrapper />, 
+  },
+  {
+    path: "/home",
+    element: <Home />, 
   },
 ]);
 
