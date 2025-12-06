@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useState, type ChangeEvent, type FormEvent } from "react";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   onClose: () => void;
@@ -10,8 +10,6 @@ interface LoginData {
   email: string;
   password: string;
 }
-
-// const navigate = useNavigate();
 
 const LoginForm: React.FC<Props> = ({ onClose }) => {
   const [loginData, setLoginData] = useState<LoginData>({
@@ -27,6 +25,8 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
     }));
   };
 
+  const navigate = useNavigate();
+
   const fetchData = async () => {
   try {
     const response = await axios.post('https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/login', {
@@ -35,7 +35,7 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
     });
 
     console.log(response.data);
-    
+
   } catch (e: any) {
       // FIX: Handle errors here
       if (e.response && e.response.status === 401) {
@@ -50,7 +50,9 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     fetchData();
-
+    setTimeout(() => {
+      navigate('/home')
+    }, 2000); 
   }
 
   const handleGuestLogin = () => {
