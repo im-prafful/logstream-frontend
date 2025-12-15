@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import ReCAPTCHA from "react-google-recaptcha";
 
 interface Props {
   onClose: () => void;
@@ -9,12 +10,14 @@ interface Props {
 interface LoginData {
   email: string;
   password: string;
+  captcha: string
 }
 
 const LoginForm: React.FC<Props> = ({ onClose }) => {
   const [loginData, setLoginData] = useState<LoginData>({
     email: "",
     password: "",
+    captcha: ""
   });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -25,34 +28,70 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
     }));
   };
 
+
+  const handleCaptcha = (token: string | null) => {
+    //The token generated upon successful completion of the checkbox is typically valid for 2 minutes (120 seconds).
+    if (token) {
+      setLoginData((prev) => ({
+        ...prev,
+        captcha: token
+      }))
+    }
+    //if timeout or error 
+    else {
+      setLoginData((prev) => ({
+        ...prev,
+        captcha: ''
+      }))
+    }
+  }
+
+
   const navigate = useNavigate();
 
   const fetchData = async () => {
-  try {
-    const response = await axios.post('https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/login', {
-      email: loginData.email,
-      password: loginData.password,
-    });
+    try {
+      console.log(loginData)
+      if (!loginData.captcha) {
+        alert('Complete captcha verification')
+        return; // Stop the execution
+      }
 
-    console.log(response.data);
+      const response = await axios.post('https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/login', {
+        email: loginData.email,
+        password: loginData.password,
+        captchaData: loginData.captcha
+      });
 
-  } catch (e: any) {
-      // FIX: Handle errors here
+      console.log(response.data);
+
+      setTimeout(() => {
+        navigate('/home')
+      }, 2000);
+
+    } catch (e: any) {
+
       if (e.response && e.response.status === 401) {
         alert("Invalid Email or Password");
-      } else {
+      }
+      else if (e.response.status === 400) {
+        // This catches the CAPTCHA failure message from the backend
+        alert(e.response.data.message || "Login failed due to validation issue.");
+      }
+      else {
         console.log("Something went wrong. Please try again.");
         console.error("Login Error:", e);
       }
     }
-};
+  };
+
+
+
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     fetchData();
-    setTimeout(() => {
-      navigate('/home')
-    }, 2000); 
+
   }
 
   const handleGuestLogin = () => {
@@ -107,6 +146,11 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
             required
           />
         </div>
+
+        <ReCAPTCHA
+          sitekey="6LdeYiwsAAAAADIiqLK3DSY_tgk6ZhcBgqAp99n-"
+          onChange={handleCaptcha}
+        />
 
         {/* Login Button */}
         <button
