@@ -64,9 +64,11 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
       });
 
       console.log(response.data);
+      let email=response.data.data.email
+      let name=response.data.data.full_name
 
       setTimeout(() => {
-        navigate('/home')
+        navigate('/home',{state:{email,name}})
       }, 2000);
 
     } catch (e: any) {
