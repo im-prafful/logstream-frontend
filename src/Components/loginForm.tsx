@@ -65,8 +65,13 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
 
       console.log(response.data);
 
+      let name=response.data.data.full_name
+      let email=response.data.data.email
+      let token=response.data.token
+
       setTimeout(() => {
-        navigate('/home')
+        localStorage.setItem("JWT",token)//save token to local storage
+        navigate('/home',{state:{name,email}})
       }, 2000);
 
     } catch (e: any) {

@@ -7,6 +7,7 @@ import './index.css'
 import App from './App'
 import { LoginRouteWrapper, SignupRouteWrapper } from './Components/routeWrapper'
 import {Home} from './home'
+import {UserDisp} from "./userDashboard"
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
     path: "/home",
     element: <Home />, 
   },
+  {
+    path:"/userDashboard",
+    element:<UserDisp/>
+  }
 ]);
 
 createRoot(document.getElementById('root')!).render(
