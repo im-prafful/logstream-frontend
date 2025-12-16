@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
                 //ADD LOGOUT BUTTON + HANDLE PROTECTED ROUTE SHIT!!
                 //CALL API TO FETCH LOGS BASED ON CATEGORY WITH COUNT AND SHOW THEM IN A GRID
                 //IMPLEMENT PAGINATION
+                
 export const UserDisp = () => {
     const navigate = useNavigate();
 
