@@ -65,8 +65,13 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
 
       console.log(response.data);
 
+      let name=response.data.data.full_name
+      let email=response.data.data.email
+      let token=response.data.token
+
       setTimeout(() => {
-        navigate('/home')
+        localStorage.setItem("JWT",token)//save token to local storage
+        navigate('/home',{state:{name,email}})
       }, 2000);
 
     } catch (e: any) {
@@ -155,7 +160,7 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
         {/* Login Button */}
         <button
           type="submit"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full cursor-pointer"
         >
           Login
         </button>
