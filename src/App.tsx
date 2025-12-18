@@ -35,14 +35,14 @@ const App: React.FC = () => {
       <div className="flex gap-4">
         <button
           onClick={handleModal1}
-          className="px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold shadow-lg hover:bg-indigo-700 transition-all duration-200"
+          className="px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold shadow-lg hover:bg-indigo-700 transition-all duration-200 cursor-pointer"
         >
           Login
         </button>
 
         <button
           onClick={handleModal2}
-          className="px-6 py-2 rounded-lg bg-gray-200 text-gray-800 font-semibold shadow hover:bg-gray-300 transition-all duration-200"
+          className="px-6 py-2 rounded-lg bg-gray-200 text-gray-800 font-semibold shadow hover:bg-gray-300 transition-all duration-200 cursor-pointer"
         >
           Sign Up
         </button>

@@ -160,7 +160,7 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
         {/* Login Button */}
         <button
           type="submit"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full cursor-pointer"
         >
           Login
         </button>
