@@ -2,10 +2,14 @@ import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
+import LevelPie from "./Components/Charts/LevelPie"
+
 
 export const UserDisp = () => {
     const navigate = useNavigate()
     const [logs, setLogs] = useState([])
+
+
 
     // Format ISO timestamp → YYYY-MM-DD HH:MM
     const formatTimestamp = (isoString: string | number | Date) => {
@@ -75,6 +79,13 @@ export const UserDisp = () => {
                 <h1 className="text-3xl font-light text-gray-800 mb-6">
                     Latest Logs
                 </h1>
+
+                {/*show graphs and charts*/}
+                <div>
+                    <LevelPie/>
+                </div>
+
+
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                     {logs.map((item, idx) => (
