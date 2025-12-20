@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
-import LevelPie from "./Components/Charts/LevelPie"
+
 
 
 export const UserDisp = () => {
     const navigate = useNavigate()
     const [logs, setLogs] = useState([])
-
+    const [categoryLogs, setCategoryLogs] = useState([])
 
 
     // Format ISO timestamp → YYYY-MM-DD HH:MM
@@ -26,29 +26,42 @@ export const UserDisp = () => {
         return `${yyyy}-${mm}-${dd} ${hh}:${min}`
     }
 
+
+
+
     useEffect(() => {
         const fetchLogsFnc = async () => {
             try {
                 const token = localStorage.getItem("JWT")
 
-                const response = await axios.get(
-                    "https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/logs",
-                    {
-                        headers: {
-                            authorization: `Bearer ${token}`
-                        }
-                    }
-                )
+                const headers = {
+                    headers: { authorization: `Bearer ${token}` }
+                }
 
-                setLogs(response.data.logs)
+                const [response1, response2] = await Promise.all([
+                    axios.get(
+                        "https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/logs",
+                        headers
+                    ),
+                    axios.post(
+                        "https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/logsOnCategory",
+                        { level: "error" },
+                        headers
+                    )
+                ])
+
+                setLogs(response1.data.logs)
+                setCategoryLogs(response2.data)
+                console.log(response2.data)
+
             } catch (err) {
                 console.error(err)
-
             }
         }
 
         fetchLogsFnc()
     }, [])
+
 
     const handleLogout = () => {
         localStorage.removeItem("JWT")
@@ -65,7 +78,7 @@ export const UserDisp = () => {
             <div className="absolute top-6 right-6 z-10 cursor-pointer">
                 <motion.button
                     onClick={handleLogout}
-                    className="px-6 py-3 rounded-xl text-white text-lg font-bold shadow-2xl"
+                    className="px-6 py-3 rounded-xl text-white text-lg font-bold shadow-2xl cursor-pointer"
                     style={gradientStyle}
                     whileTap={{ scale: 0.95 }}
                     whileHover={{ y: -2 }}
@@ -81,9 +94,8 @@ export const UserDisp = () => {
                 </h1>
 
                 {/*show graphs and charts*/}
-                <div>
-                    <LevelPie/>
-                </div>
+
+
 
 
 
@@ -96,19 +108,18 @@ export const UserDisp = () => {
                             whileHover={{ scale: 1.03, y: -4 }}
                             transition={{ duration: 0.2, ease: "easeOut" }}
                             className="
-    bg-white rounded-xl shadow-md p-5 h-full
-    cursor-pointer
-  "
+                                bg-white rounded-xl shadow-md p-5 h-full
+                                cursor-pointer"
                         >
 
                             {/* Header */}
                             <div className="flex justify-between items-center mb-2">
                                 <span
                                     className={`text-xs font-bold uppercase ${item.level === "error"
-                                            ? "text-red-600"
-                                            : item.level === "warn"
-                                                ? "text-yellow-600"
-                                                : "text-blue-600"
+                                        ? "text-red-600"
+                                        : item.level === "warn"
+                                            ? "text-yellow-600"
+                                            : "text-blue-600"
                                         }`}
                                 >
                                     {item.level}
