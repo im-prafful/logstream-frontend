@@ -1,5 +1,5 @@
 import React, { useState, type ChangeEvent, type FormEvent } from "react";
-
+import axios from "axios";
 interface Props {
   onClose: () => void;
 }
@@ -28,19 +28,19 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
 
   const [errors, setErrors] = useState<Partial<FormData>>({});
 
-  const upperCaseCheck = (s : string) => s.split("").some(char => char >= 'A' && char <= 'Z');
-  const specialCharCheck = (s : string) =>  s.split("").some(char => (specialCharList).includes(char));
+  const upperCaseCheck = (s: string) => s.split("").some(char => char >= 'A' && char <= 'Z');
+  const specialCharCheck = (s: string) => s.split("").some(char => (specialCharList).includes(char));
 
   const validate = (): boolean => {
     const newErrors: Partial<FormData> = {};
-    let isValid = true;    
+    let isValid = true;
 
     // Name Validation (Vulgarity & Length)
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
       isValid = false;
     } else {
-      const foundBadWord = bannedWordList.find(word => 
+      const foundBadWord = bannedWordList.find(word =>
         formData.name.toLowerCase().includes(word)
       );
       if (foundBadWord) {
@@ -53,16 +53,16 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
     const { email } = formData;
     const atIndex = email.indexOf("@");
     const lastDotIndex = email.lastIndexOf(".");
-    
+
     if (!email) {
       newErrors.email = "Email is required";
       isValid = false;
     } else if (
-        !email.includes("@") || 
-        atIndex === 0 || 
-        atIndex === email.length - 1 || 
-        lastDotIndex < atIndex ||
-        email.includes(" ")
+      !email.includes("@") ||
+      atIndex === 0 ||
+      atIndex === email.length - 1 ||
+      lastDotIndex < atIndex ||
+      email.includes(" ")
     ) {
       newErrors.email = "Please enter a valid email address.";
       isValid = false;
@@ -109,7 +109,7 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (errors[name as keyof FormData]) {
-        setErrors(prev => ({ ...prev, [name]: "" }));
+      setErrors(prev => ({ ...prev, [name]: "" }));
     }
 
     setFormData((prev) => ({
@@ -118,11 +118,23 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
     }));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (validate()) {
-        console.log("Submitted:", formData);
+    try {
+      if (validate()) {
+        let response = await axios.post('https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/signup', {
+          email: formData.email,
+          name: formData.name,
+          password: formData.password
+
+        })
+        console.log(response.data)
+      }
+    } catch (e) {
+      console.error(`failed to signup`, e)
     }
+
+
   };
 
   return (
@@ -153,9 +165,8 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
             value={formData.name}
             onChange={handleChange}
             placeholder="John Doe"
-            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${
-                errors.name ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
-            }`}
+            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${errors.name ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
+              }`}
             required
           />
           {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
@@ -173,9 +184,8 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
             value={formData.email}
             onChange={handleChange}
             placeholder="your@email.com"
-            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${
-                errors.email ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
-            }`}
+            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${errors.email ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
+              }`}
             required
           />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -192,9 +202,8 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
             value={formData.password}
             onChange={handleChange}
             placeholder="********"
-            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${
-                errors.password ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
-            }`}
+            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${errors.password ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
+              }`}
             required
           />
           {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
