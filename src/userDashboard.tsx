@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
+import CategoryDropdown from "./Components/CategoryDropdown"
 
 
 
@@ -9,6 +10,7 @@ export const UserDisp = () => {
     const navigate = useNavigate()
     const [logs, setLogs] = useState([])
     const [categoryLogs, setCategoryLogs] = useState([])
+    const [category, setCategory] = useState('error')
 
 
     // Format ISO timestamp → YYYY-MM-DD HH:MM
@@ -34,25 +36,24 @@ export const UserDisp = () => {
             try {
                 const token = localStorage.getItem("JWT")
 
-                const headers = {
-                    headers: { authorization: `Bearer ${token}` }
-                }
+                const config = {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                };
 
-                const [response1, response2] = await Promise.all([
-                    axios.get(
-                        "https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/logs",
-                        headers
-                    ),
+
+                const [response1] = await Promise.all([
                     axios.post(
-                        "https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/logsOnCategory",
-                        { level: "error" },
-                        headers
+                        "https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/logs",
+                        { level: category },
+                        config
                     )
-                ])
-
+                ]);
+                console.log(response1.data)
                 setLogs(response1.data.logs)
-                setCategoryLogs(response2.data)
-                console.log(response2.data)
+
+                setCategoryLogs(response1.data.rows)
 
             } catch (err) {
                 console.error(err)
@@ -60,7 +61,7 @@ export const UserDisp = () => {
         }
 
         fetchLogsFnc()
-    }, [])
+    }, [category])
 
 
     const handleLogout = () => {
@@ -92,12 +93,6 @@ export const UserDisp = () => {
                 <h1 className="text-3xl font-light text-gray-800 mb-6">
                     Latest Logs
                 </h1>
-
-                {/*show graphs and charts*/}
-
-
-
-
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                     {logs.map((item, idx) => (
@@ -139,6 +134,16 @@ export const UserDisp = () => {
                         </motion.div>
                     ))}
                 </div>
+
+                {/*show graphs and charts*/}
+
+
+
+
+                <div>
+                    <CategoryDropdown  value={category} onChange={setCategory} />
+                </div>
+
             </div>
         </div>
     )
