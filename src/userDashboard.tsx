@@ -2,23 +2,75 @@ import React, { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { AlertCircle, TrendingUp, Layers, Activity, Clock, LogOut, List, Zap, Sparkles } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import axios from "axios"
 
 export const UserDisp = () => {
     const [logs, setLogs] = useState([])
     const [categoryLogs, setCategoryLogs] = useState([])
     const [logsPerCategory, setLogsPerCategory] = useState([])
-    const [category, setCategory] = useState('error')
     const [loading, setLoading] = useState(true)
-     const [logsPerCluster, setLogsPerCluster] = useState([]) 
-    
-    const navigate=useNavigate()
+    const [logsPerCluster, setLogsPerCluster] = useState([])
+
+
+    const [filterParams, setFilterParams] = useState({
+        lvl: '',
+        timestamp: ''
+    })
+
+       const handleFilterChange = (e) => {
+        const { name, value } = e.target
+
+        setFilterParams(prev => ({
+            ...prev,
+            [name]: value
+        }))
+    }
+
+
+    const handlefiltersubmit = async () => {
+    const token = localStorage.getItem("JWT")
+
+    try {
+        if (!filterParams.lvl && !filterParams.timestamp) {
+            alert('At least 1 param is required for filtering')
+            return
+        }
+        const payloadToSend = {
+    ...filterParams,
+    timestamp: filterParams.timestamp
+        ? Number(filterParams.timestamp)
+        : undefined}
+                console.log(payloadToSend)
+        const response = await axios.post(
+            'https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/category_logs',
+            {
+                payload: payloadToSend
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        )
+
+        console.log(response.data)
+    } catch (e) {
+        console.error(e)
+        alert('Something went wrong')
+    }
+}
+
+
+
+    const navigate = useNavigate()
 
     const formatTimestamp = (isoString) => {
         if (!isoString) return "-"
         const date = new Date(isoString)
-        return date.toLocaleString('en-GB', { 
-            year: 'numeric', month: '2-digit', day: '2-digit', 
-            hour: '2-digit', minute: '2-digit', hour12: false 
+        return date.toLocaleString('en-GB', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', hour12: false
         }).replace(',', '')
     }
 
@@ -45,26 +97,25 @@ export const UserDisp = () => {
     useEffect(() => {
         const fetchLogsFnc = async () => {
             try {
-                const token = localStorage.getItem("JWT") || "demo-token"
-                const response = await fetch(
+                const token = localStorage.getItem("JWT")
+
+                const response = await axios.get(
                     "https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/logs",
                     {
-                        method: "POST",
                         headers: {
                             "Authorization": `Bearer ${token}`,
                             "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ level: category })
+                        }
                     }
                 )
-                
-                const data = await response.json()
-                console.log(data)
-                setLogs(data.logs || [])
-                setCategoryLogs(data.rows || [])
-                setLogsPerCategory(data.logs_per_category || [])
-                setLogsPerCluster(data.logs_per_cluster || []) // ADD THIS
+
+                console.log(response.data)
+                setLogs(response.data.logs || [])
+                //setCategoryLogs(response.data.rows || [])
+                setLogsPerCategory(response.data.logs_per_category || [])
+                setLogsPerCluster(response.data.logs_per_cluster || [])
                 setLoading(false)
+
             } catch (err) {
                 console.error("Fetch Error:", err)
                 setLoading(false)
@@ -72,13 +123,13 @@ export const UserDisp = () => {
         }
 
         fetchLogsFnc()
-    }, [category])
+    }, [])
 
-          const handleExploreClick = () => {
-        navigate('/clustersExplore', { 
-            state: { 
+    const handleExploreClick = () => {
+        navigate('/clustersExplore', {
+            state: {
                 logsPerCluster: logsPerCluster  // Pass this data
-            } 
+            }
         })
     }
 
@@ -93,7 +144,7 @@ export const UserDisp = () => {
     // Animation variants
     const containerVariants = {
         hidden: { opacity: 0 },
-        visible: { 
+        visible: {
             opacity: 1,
             transition: { staggerChildren: 0.1 }
         }
@@ -101,8 +152,8 @@ export const UserDisp = () => {
 
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
-        visible: { 
-            opacity: 1, 
+        visible: {
+            opacity: 1,
             y: 0,
             transition: { type: "spring", stiffness: 100 }
         }
@@ -110,8 +161,8 @@ export const UserDisp = () => {
 
     const cardHoverVariants = {
         rest: { scale: 1, y: 0 },
-        hover: { 
-            scale: 1.02, 
+        hover: {
+            scale: 1.02,
             y: -4,
             transition: { type: "spring", stiffness: 400, damping: 10 }
         }
@@ -120,7 +171,7 @@ export const UserDisp = () => {
     // --- SUB-COMPONENTS ---
 
     const CategoryStats = () => (
-        <motion.div 
+        <motion.div
             className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
             variants={containerVariants}
             initial="hidden"
@@ -129,8 +180,8 @@ export const UserDisp = () => {
             {logsPerCategory.map((cat, idx) => {
                 const percentage = ((parseInt(cat.tc) / totalLogs) * 100).toFixed(1)
                 return (
-                    <motion.div 
-                        key={idx} 
+                    <motion.div
+                        key={idx}
                         className="bg-white rounded-xl p-5 shadow-sm border border-gray-100"
                         variants={itemVariants}
                         whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
@@ -138,7 +189,7 @@ export const UserDisp = () => {
                     >
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
-                                  style={{ color: getLevelColor(cat.lvl), backgroundColor: getLevelBgColor(cat.lvl) }}>
+                                style={{ color: getLevelColor(cat.lvl), backgroundColor: getLevelBgColor(cat.lvl) }}>
                                 {cat.lvl}
                             </span>
                             <motion.div
@@ -148,7 +199,7 @@ export const UserDisp = () => {
                                 <Activity className="w-4 h-4" style={{ color: getLevelColor(cat.lvl) }} />
                             </motion.div>
                         </div>
-                        <motion.div 
+                        <motion.div
                             className="text-3xl font-bold text-gray-800"
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
@@ -173,7 +224,7 @@ export const UserDisp = () => {
         }).join(', ')
 
         return (
-            <motion.div 
+            <motion.div
                 className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-full"
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -183,7 +234,7 @@ export const UserDisp = () => {
                     <Layers className="w-4 h-4 text-purple-600" /> Distribution
                 </h3>
                 <div className="flex flex-col items-center">
-                    <motion.div 
+                    <motion.div
                         className="relative w-48 h-48 rounded-full shadow-inner mb-8"
                         style={{ background: `conic-gradient(${gradientSlices})` }}
                         initial={{ scale: 0, rotate: -180 }}
@@ -191,7 +242,7 @@ export const UserDisp = () => {
                         transition={{ duration: 1, type: "spring" }}
                     >
                         <div className="absolute inset-8 bg-white rounded-full flex flex-col items-center justify-center shadow-lg">
-                            <motion.span 
+                            <motion.span
                                 className="text-2xl font-black text-gray-800"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -202,15 +253,15 @@ export const UserDisp = () => {
                             <span className="text-[10px] text-gray-400 uppercase font-bold">Total Logs</span>
                         </div>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                         className="w-full grid grid-cols-2 gap-2"
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"
                     >
                         {logsPerCategory.map((cat, idx) => (
-                            <motion.div 
-                                key={idx} 
+                            <motion.div
+                                key={idx}
                                 className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
                                 variants={itemVariants}
                                 whileHover={{ backgroundColor: "#f3f4f6", scale: 1.05 }}
@@ -228,7 +279,7 @@ export const UserDisp = () => {
     const BarChart = () => {
         const maxCount = Math.max(...logsPerCategory.map(cat => parseInt(cat.tc)))
         return (
-            <motion.div 
+            <motion.div
                 className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-full"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -239,8 +290,8 @@ export const UserDisp = () => {
                 </h3>
                 <div className="space-y-5">
                     {logsPerCategory.map((cat, idx) => (
-                        <motion.div 
-                            key={idx} 
+                        <motion.div
+                            key={idx}
                             className="space-y-1"
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -257,7 +308,7 @@ export const UserDisp = () => {
                                 </motion.span>
                             </div>
                             <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                                <motion.div 
+                                <motion.div
                                     className="h-full"
                                     style={{ backgroundColor: getLevelColor(cat.lvl) }}
                                     initial={{ width: 0 }}
@@ -274,7 +325,7 @@ export const UserDisp = () => {
 
     if (loading) return (
         <div className="flex items-center justify-center min-h-screen bg-gray-50">
-            <motion.div 
+            <motion.div
                 className="rounded-full h-10 w-10 border-t-2 border-purple-600"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -285,14 +336,14 @@ export const UserDisp = () => {
     return (
         <div className="min-h-screen bg-[#f8fafc] pb-20">
             {/* Header */}
-            <motion.header 
+            <motion.header
                 className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm"
                 initial={{ y: -100 }}
                 animate={{ y: 0 }}
                 transition={{ type: "spring", stiffness: 100 }}
             >
                 <div className="flex items-center gap-3">
-                    <motion.div 
+                    <motion.div
                         className="bg-purple-600 p-2 rounded-lg text-white"
                         whileHover={{ rotate: 360 }}
                         transition={{ duration: 0.5 }}
@@ -306,7 +357,7 @@ export const UserDisp = () => {
                 <div className="flex items-center gap-4">
                     {/* Explore Clusters Button */}
                     <motion.button
-                         onClick={handleExploreClick}
+                        onClick={handleExploreClick}
                         className="relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold rounded-lg shadow-lg overflow-hidden"
                         whileHover={{ scale: 1.05, boxShadow: "0 10px 40px rgba(124, 58, 237, 0.4)" }}
                         whileTap={{ scale: 0.95 }}
@@ -321,12 +372,12 @@ export const UserDisp = () => {
                         <Sparkles className="w-4 h-4" />
                         <span>Explore Clusters</span>
                         <motion.div
-                            animate={{ 
+                            animate={{
                                 scale: [1, 1.2, 1],
                                 opacity: [1, 0.8, 1]
                             }}
-                            transition={{ 
-                                duration: 2, 
+                            transition={{
+                                duration: 2,
                                 repeat: Infinity,
                                 ease: "easeInOut"
                             }}
@@ -334,8 +385,8 @@ export const UserDisp = () => {
                         />
                     </motion.button>
 
-                    <motion.button 
-                        onClick={handleLogout} 
+                    <motion.button
+                        onClick={handleLogout}
                         className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 hover:text-red-500 transition-colors"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -356,7 +407,7 @@ export const UserDisp = () => {
                 </div>
 
                 {/* 3. Latest Logs Grid (Top 5) */}
-                <motion.div 
+                <motion.div
                     className="mb-10"
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -365,28 +416,28 @@ export const UserDisp = () => {
                     <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Zap className="w-4 h-4 text-yellow-500" /> Recent Activity
                     </h2>
-                    <motion.div 
+                    <motion.div
                         className="grid grid-cols-1 md:grid-cols-3 gap-6"
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"
                     >
                         {logs.slice(0, 5).map((item, idx) => (
-                            <motion.div 
-                                key={idx} 
+                            <motion.div
+                                key={idx}
                                 className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm cursor-pointer"
                                 variants={itemVariants}
                                 initial="rest"
                                 whileHover="hover"
                                 custom={cardHoverVariants}
-                                whileHover={{ 
+                                whileHover={{
                                     borderColor: getLevelColor(item.level),
                                     boxShadow: `0 10px 30px ${getLevelColor(item.level)}20`
                                 }}
                             >
                                 <div className="flex justify-between items-center mb-3">
                                     <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded"
-                                          style={{ color: getLevelColor(item.level), backgroundColor: getLevelBgColor(item.level) }}>
+                                        style={{ color: getLevelColor(item.level), backgroundColor: getLevelBgColor(item.level) }}>
                                         {item.level}
                                     </span>
                                     <div className="flex items-center gap-1 text-[10px] text-gray-400">
@@ -400,28 +451,68 @@ export const UserDisp = () => {
                 </motion.div>
 
                 {/* 4. Filter & Main Log Viewer */}
-                <motion.div 
+                <motion.div
                     className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                 >
-                    <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                            <List className="w-5 h-5 text-purple-600" />
-                            <h2 className="text-lg font-bold text-gray-800 capitalize">{category} History (Top 30)</h2>
+                    <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white">
+
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-purple-50">
+                                <List className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-800 capitalize">
+                                Log History <span className="text-gray-400 font-medium">(Top 30)</span>
+                            </h2>
                         </div>
-                        <motion.select 
-                            value={category} 
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="bg-gray-50 border border-gray-200 text-sm rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
-                            whileFocus={{ scale: 1.02 }}
-                        >
-                            {logsPerCategory.map((cat, idx) => (
-                                <option key={idx} value={cat.lvl}>{cat.lvl.toUpperCase()}</option>
-                            ))}
-                        </motion.select>
+
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+
+                            <motion.select
+                                name="timestamp"
+                                value={filterParams.timestamp}
+                                onChange={handleFilterChange}
+                                className="min-w-[140px] bg-gray-50 border border-gray-200 text-sm rounded-lg px-4 py-2.5
+                                        text-gray-700 focus:ring-2 focus:ring-purple-500 focus:border-purple-500
+                                        hover:bg-gray-100 transition-all"
+                                whileFocus={{ scale: 1.02 }}
+                            >
+                                <option value="">None</option>
+                                <option value="7">Last 7 days</option>
+                                <option value="30">Last 30 days</option>
+                            </motion.select>
+
+
+                            <motion.select
+                                name="lvl"
+                                value={filterParams.lvl}
+                                onChange={handleFilterChange}
+                                className="min-w-[140px] bg-gray-50 border border-gray-200 text-sm rounded-lg px-4 py-2.5
+             text-gray-700 focus:ring-2 focus:ring-purple-500 focus:border-purple-500
+             hover:bg-gray-100 transition-all"
+                                whileFocus={{ scale: 1.02 }}
+                            >
+                                {logsPerCategory.map((item, idx) => (
+                                    <option key={idx}>
+                                        {item.lvl}
+                                    </option>
+                                ))}
+                            </motion.select>
+
+
+                            <button
+                                className="px-5 py-2.5 rounded-lg bg-purple-600 text-white text-sm font-medium
+                 hover:bg-purple-700 active:scale-95 transition-all shadow-sm"
+                                onClick={handlefiltersubmit}
+                            >
+                                Apply filters
+                            </button>
+
+                        </div>
                     </div>
+
 
                     <div className="w-full">
                         <div className="hidden md:grid grid-cols-[180px_120px_1fr] gap-4 px-6 py-3 bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
@@ -429,18 +520,20 @@ export const UserDisp = () => {
                             <div>Level</div>
                             <div>Message</div>
                         </div>
-                        
+
                         <div className="max-h-[600px] overflow-y-auto divide-y divide-gray-50">
                             <AnimatePresence>
-                                {categoryLogs.map((log, idx) => (
-                                    <motion.div 
-                                        key={log.log_id} 
+                                {
+                                    /*
+                                        {categoryLogs.map((log, idx) => (
+                                    <motion.div
+                                        key={log.log_id}
                                         className="grid grid-cols-1 md:grid-cols-[180px_120px_1fr] gap-2 md:gap-4 px-6 py-4 items-center cursor-pointer"
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: 20 }}
                                         transition={{ delay: idx * 0.03 }}
-                                        whileHover={{ 
+                                        whileHover={{
                                             backgroundColor: "rgba(0,0,0,0.02)",
                                             x: 4
                                         }}
@@ -450,7 +543,7 @@ export const UserDisp = () => {
                                         </div>
                                         <div>
                                             <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-md"
-                                                  style={{ color: getLevelColor(log.level), backgroundColor: getLevelBgColor(log.level) }}>
+                                                style={{ color: getLevelColor(log.level), backgroundColor: getLevelBgColor(log.level) }}>
                                                 {log.level}
                                             </span>
                                         </div>
@@ -459,6 +552,9 @@ export const UserDisp = () => {
                                         </div>
                                     </motion.div>
                                 ))}
+                                    */
+                                }
+
                             </AnimatePresence>
                         </div>
                     </div>

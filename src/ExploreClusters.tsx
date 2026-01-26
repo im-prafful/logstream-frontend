@@ -3,8 +3,8 @@ import { ChevronDown, ChevronRight, AlertCircle, Activity, Clock, ArrowLeft, Lay
 
 const ExploreClusters = () => {
   const [logsPerCluster, setLogsPerCluster] = useState([])
-  const [expandedClusters, setExpandedClusters] = useState(new Set())
-  const [clusterLogs, setClusterLogs] = useState({})
+  const [expandedClusters, setExpandedClusters] = useState(new Set())//A Set that stores which clusters are expanded..If cluster ID is in the set → details are visible
+  const [clusterLogs, setClusterLogs] = useState({})//This avoids refetching logs again and again
   const [loadingLogs, setLoadingLogs] = useState({})
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const ExploreClusters = () => {
   }
 
   const fetchClusterLogs = async (clusterId) => {
-    if (clusterLogs[clusterId]) return
+    if (clusterLogs[clusterId]) return//If logs already exist → don’t refetch...This is caching logic
 
     setLoadingLogs(prev => ({ ...prev, [clusterId]: true }))
 
@@ -134,6 +134,12 @@ const ExploreClusters = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+
+
+
+
+
+
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 py-5 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -163,12 +169,19 @@ const ExploreClusters = () => {
               </div>
               <div className="flex items-center gap-2 bg-red-100 px-3 py-1.5 rounded-full">
                 <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                <span className="font-semibold text-red-700">Anomaly</span>
+                <span className="font-semibold text-red-700">High Volume</span>
               </div>
             </div>
           </div>
         </div>
       </header>
+
+
+
+
+
+
+
 
       {/* Cloud Visualization */}
       <div className="relative min-h-[600px] overflow-hidden py-12">
@@ -212,6 +225,12 @@ const ExploreClusters = () => {
           </div>
         </div>
       </div>
+
+
+
+
+
+
 
       {/* Detailed List View */}
       <div className="max-w-7xl mx-auto px-8 pb-12">

@@ -8,7 +8,7 @@ import { LoginRouteWrapper, SignupRouteWrapper } from './Components/routeWrapper
 import {Home} from './home'
 import {UserDisp} from "./userDashboard"
 import { ProtectedRoute } from './Components/ProtectedRoute'
-import ExploreClusters from './Components/ExploreClusters'
+import ExploreClusters from './ExploreClusters'
 
 const router = createBrowserRouter([
   {
