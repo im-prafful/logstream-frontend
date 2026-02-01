@@ -1,5 +1,6 @@
 import React, { useState, type ChangeEvent, type FormEvent } from "react";
 import axios from "axios";
+
 interface Props {
   onClose: () => void;
 }
@@ -8,6 +9,7 @@ interface FormData {
   email: string;
   password: string;
   name: string;
+  role: string;
 }
 
 const bannedWordList = [
@@ -23,30 +25,21 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
-    name: ""
+    name: "",
+    role: ""
   });
 
-  const [errors, setErrors] = useState<Partial<FormData>>({});
-
   const upperCaseCheck = (s: string) => s.split("").some(char => char >= 'A' && char <= 'Z');
-  const specialCharCheck = (s: string) => s.split("").some(char => (specialCharList).includes(char));
+  const specialCharCheck = (s: string) => s.split("").some(char => specialCharList.includes(char));
 
   const validate = (): boolean => {
-    const newErrors: Partial<FormData> = {};
-    let isValid = true;
-
-    // Name Validation (Vulgarity & Length)
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-      isValid = false;
-    } else {
-      const foundBadWord = bannedWordList.find(word =>
-        formData.name.toLowerCase().includes(word)
-      );
-      if (foundBadWord) {
-        newErrors.name = "Username contains restricted words.";
-        isValid = false;
-      }
+    // Name Validation
+    const foundBadWord = bannedWordList.find(word =>
+      formData.name.toLowerCase().includes(word)
+    );
+    if (foundBadWord) {
+      alert("Username contains restricted words.");
+      return false;
     }
 
     // Email Validation
@@ -54,64 +47,50 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
     const atIndex = email.indexOf("@");
     const lastDotIndex = email.lastIndexOf(".");
 
-    if (!email) {
-      newErrors.email = "Email is required";
-      isValid = false;
-    } else if (
+    if (
       !email.includes("@") ||
       atIndex === 0 ||
       atIndex === email.length - 1 ||
       lastDotIndex < atIndex ||
       email.includes(" ")
     ) {
-      newErrors.email = "Please enter a valid email address.";
-      isValid = false;
-    } else {
-      const localPart = email.split("@")[0];
-      if (localPart.endsWith(".com") || localPart.endsWith(".net") || localPart.endsWith(".org")) {
-        newErrors.email = "Username part of email cannot look like a domain.";
-        isValid = false;
-      }
+      alert("Please enter a valid email address.");
+      return false;
+    }
+
+    const localPart = email.split("@")[0];
+    if (localPart.endsWith(".com") || localPart.endsWith(".net") || localPart.endsWith(".org")) {
+      alert("Username part of email cannot look like a domain.");
+      return false;
     }
 
     // Password Validation
     const { password } = formData;
-    const newName = formData?.name?.split(" ").join("").toLowerCase();
-    const newEmail = formData?.email?.split(" ").join("").toLowerCase();
+    const newName = formData.name.split(" ").join("").toLowerCase();
+    const newEmail = formData.email.split(" ").join("").toLowerCase();
 
-    if (!password) {
-      newErrors.password = "Password is required";
-      isValid = false;
-    }
     if (password.length < 8) {
-      newErrors.password = "Minimum 8 characters required";
-      isValid = false;
+      alert("Password must be at least 8 characters long.");
+      return false;
     }
     if (!upperCaseCheck(password)) {
-      newErrors.password = "Must contain at least 1 uppercase letter";
-      isValid = false;
+      alert("Password must contain at least 1 uppercase letter.");
+      return false;
     }
     if (!specialCharCheck(password)) {
-      newErrors.password = "Must contain at least 1 special character";
-      isValid = false;
+      alert("Password must contain at least 1 special character.");
+      return false;
     }
-    if (
-      (formData.name && formData.password.toLowerCase().includes(newName))
-      || (formData.email && formData.password.toLowerCase().includes(newEmail))
-    ) {
-      newErrors.password = "Password can not be same as your username or email";
-      isValid = false;
+    if (password.toLowerCase().includes(newName) || password.toLowerCase().includes(newEmail)) {
+      alert("Password cannot be the same as your username or email.");
+      return false;
     }
-    setErrors(newErrors);
-    return isValid;
+
+    return true;
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (errors[name as keyof FormData]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
-    }
-
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -120,26 +99,30 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!validate()) return;
+
     try {
-      if (validate()) {
-        let response = await axios.post('https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/signup', {
-          email: formData.email,
+      const response = await axios.post(
+        'https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/signup',{
+           email: formData.email,
           name: formData.name,
-          password: formData.password
-
-        })
-        console.log(response.data)
-      }
+          password: formData.password,
+          role:formData.role
+        }
+        
+      );
+      console.log(response.data);
+      alert('User successfully registered!');
+      onClose();
     } catch (e) {
-      console.error(`failed to signup`, e)
+      console.error('Failed to signup:', e);
+      alert('Signup failed. Please try again.');
     }
-
-
   };
 
   return (
     <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm relative">
-
       {/* Close Button */}
       <button
         onClick={onClose}
@@ -153,7 +136,6 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
       </h2>
 
       <form onSubmit={handleSubmit}>
-
         {/* Name */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-semibold mb-2">
@@ -165,13 +147,10 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
             value={formData.name}
             onChange={handleChange}
             placeholder="John Doe"
-            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${errors.name ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
-              }`}
+            className="shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
           />
-          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
         </div>
-
 
         {/* Email */}
         <div className="mb-4">
@@ -184,15 +163,13 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
             value={formData.email}
             onChange={handleChange}
             placeholder="your@email.com"
-            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${errors.email ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
-              }`}
+            className="shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
           />
-          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
         </div>
 
         {/* Password */}
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="block text-gray-700 text-sm font-semibold mb-2">
             Password
           </label>
@@ -202,16 +179,30 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
             value={formData.password}
             onChange={handleChange}
             placeholder="********"
-            className={`shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 ${errors.password ? "border-red-500 focus:ring-red-500" : "focus:ring-indigo-500"
-              }`}
+            className="shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
           />
-          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+        </div>
+
+        {/* Role */}
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">
+            Role
+          </label>
+          <input
+            type="text"
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            placeholder="QA/Dev/SRE"
+            className="shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            required
+          />
         </div>
 
         <button
           type="submit"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full transition-colors"
         >
           Sign Up
         </button>

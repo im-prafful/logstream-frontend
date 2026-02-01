@@ -17,7 +17,7 @@ export const UserDisp = () => {
         timestamp: ''
     })
 
-       const handleFilterChange = (e) => {
+    const handleFilterChange = (e) => {
         const { name, value } = e.target
 
         setFilterParams(prev => ({
@@ -28,38 +28,40 @@ export const UserDisp = () => {
 
 
     const handlefiltersubmit = async () => {
-    const token = localStorage.getItem("JWT")
+        const token = localStorage.getItem("JWT")
 
-    try {
-        if (!filterParams.lvl && !filterParams.timestamp) {
-            alert('At least 1 param is required for filtering')
-            return
-        }
-        const payloadToSend = {
-    ...filterParams,
-    timestamp: filterParams.timestamp
-        ? Number(filterParams.timestamp)
-        : undefined}
-                console.log(payloadToSend)
-        const response = await axios.post(
-            'https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/category_logs',
-            {
-                payload: payloadToSend
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                }
+        try {
+            if (!filterParams.lvl && !filterParams.timestamp) {
+                alert('At least 1 param is required for filtering')
+                return
             }
-        )
+            const payloadToSend = {
+                ...filterParams,
+                timestamp: filterParams.timestamp
+                    ? Number(filterParams.timestamp)
+                    : undefined
+            }
+            console.log(payloadToSend)
+            const response = await axios.post(
+                'https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/category_logs',
+                {
+                    payload: payloadToSend
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            )
 
-        console.log(response.data)
-    } catch (e) {
-        console.error(e)
-        alert('Something went wrong')
+            console.log(response.data)
+            setCategoryLogs(response.data.logs)
+        } catch (e) {
+            console.error(e)
+            alert('Something went wrong')
+        }
     }
-}
 
 
 
@@ -464,7 +466,7 @@ export const UserDisp = () => {
                                 <List className="w-5 h-5 text-purple-600" />
                             </div>
                             <h2 className="text-lg font-semibold text-gray-800 capitalize">
-                                Log History <span className="text-gray-400 font-medium">(Top 30)</span>
+                                Master Log Ledger <span className="text-gray-400 font-medium">(Top 20)</span>
                             </h2>
                         </div>
 
@@ -479,7 +481,7 @@ export const UserDisp = () => {
                                         hover:bg-gray-100 transition-all"
                                 whileFocus={{ scale: 1.02 }}
                             >
-                                <option value="">None</option>
+                                <option value="">Time Period</option>
                                 <option value="7">Last 7 days</option>
                                 <option value="30">Last 30 days</option>
                             </motion.select>
@@ -494,6 +496,7 @@ export const UserDisp = () => {
              hover:bg-gray-100 transition-all"
                                 whileFocus={{ scale: 1.02 }}
                             >
+                                <option value="">Log Level</option>
                                 {logsPerCategory.map((item, idx) => (
                                     <option key={idx}>
                                         {item.lvl}
@@ -513,51 +516,79 @@ export const UserDisp = () => {
                         </div>
                     </div>
 
-
                     <div className="w-full">
-                        <div className="hidden md:grid grid-cols-[180px_120px_1fr] gap-4 px-6 py-3 bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                        {/* Header */}
+                        <div className="hidden md:grid grid-cols-[180px_120px_1fr_160px] gap-4 px-6 py-3 bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
                             <div>Timestamp</div>
                             <div>Level</div>
                             <div>Message</div>
+                            <div>Source</div>
                         </div>
 
+                        {/* Logs */}
                         <div className="max-h-[600px] overflow-y-auto divide-y divide-gray-50">
                             <AnimatePresence>
-                                {
-                                    /*
-                                        {categoryLogs.map((log, idx) => (
-                                    <motion.div
-                                        key={log.log_id}
-                                        className="grid grid-cols-1 md:grid-cols-[180px_120px_1fr] gap-2 md:gap-4 px-6 py-4 items-center cursor-pointer"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 20 }}
-                                        transition={{ delay: idx * 0.03 }}
-                                        whileHover={{
-                                            backgroundColor: "rgba(0,0,0,0.02)",
-                                            x: 4
-                                        }}
-                                    >
-                                        <div className="text-xs font-mono text-gray-400">
-                                            {formatTimestamp(log.timestamp)}
-                                        </div>
-                                        <div>
-                                            <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-md"
-                                                style={{ color: getLevelColor(log.level), backgroundColor: getLevelBgColor(log.level) }}>
-                                                {log.level}
-                                            </span>
-                                        </div>
-                                        <div className="text-sm text-gray-700 font-medium leading-relaxed">
-                                            {log.message}
-                                        </div>
-                                    </motion.div>
-                                ))}
-                                    */
-                                }
+                                {categoryLogs && categoryLogs.length > 0 ? (
+                                    categoryLogs.map((log, idx) => (
+                                        <motion.div
+                                            key={log.log_id}
+                                            className="grid grid-cols-1 md:grid-cols-[180px_120px_1fr_160px] gap-2 md:gap-4 px-6 py-4 items-center cursor-pointer"
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: 20 }}
+                                            transition={{ delay: idx * 0.03 }}
+                                            whileHover={{
+                                                backgroundColor: "rgba(0,0,0,0.02)",
+                                                x: 4,
+                                            }}
+                                        >
+                                            {/* Timestamp */}
+                                            <div className="text-xs font-mono text-gray-400">
+                                                {formatTimestamp(log.timestamp)}
+                                            </div>
 
+                                            {/* Level */}
+                                            <div>
+                                                <span
+                                                    className="text-[10px] font-bold uppercase px-2 py-1 rounded-md"
+                                                    style={{
+                                                        color: getLevelColor(log.level),
+                                                        backgroundColor: getLevelBgColor(log.level),
+                                                    }}
+                                                >
+                                                    {log.level}
+                                                </span>
+                                            </div>
+
+                                            {/* Message */}
+                                            <div className="text-sm text-gray-700 font-medium leading-relaxed">
+                                                {log.message}
+                                            </div>
+
+                                            {/* Source */}
+                                            <div>
+                                                <span className="inline-block max-w-full truncate rounded-md bg-gray-100 px-2 py-1 text-[10px] font-mono text-gray-600">
+                                                    {log.source}
+                                                </span>
+                                            </div>
+                                        </motion.div>
+                                    ))
+                                ) : (
+                                    <motion.div
+                                        key="empty"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="px-6 py-8 text-center text-gray-400 text-sm"
+                                    >
+                                        No Logs Found
+                                    </motion.div>
+                                )}
                             </AnimatePresence>
                         </div>
                     </div>
+
+
                 </motion.div>
             </main>
         </div>

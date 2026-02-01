@@ -10,14 +10,16 @@ interface Props {
 interface LoginData {
   email: string;
   password: string;
-  captcha: string
+  captcha: string;
+  role: string;
 }
 
 const LoginForm: React.FC<Props> = ({ onClose }) => {
   const [loginData, setLoginData] = useState<LoginData>({
     email: "",
     password: "",
-    captcha: ""
+    captcha: "",
+    role: ""
   });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -28,13 +30,12 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
     }));
   };
 
-
   const handleCaptcha = (token: string | null) => {
     //The token generated upon successful completion of the checkbox is typically valid for 2 minutes (120 seconds).
     if (token) {
       setLoginData((prev) => ({
         ...prev,
-        captcha: token
+        captcha: token//after checking all boxes google generates a token and we save it in captchaData.... then we send this captchData to the backend for validation
       }))
     }
     //if timeout or error 
@@ -45,7 +46,6 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
       }))
     }
   }
-
 
   const navigate = useNavigate();
 
@@ -60,24 +60,25 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
       const response = await axios.post('https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/login', {
         email: loginData.email,
         password: loginData.password,
-        captchaData: loginData.captcha
+        captchaData: loginData.captcha,
+        role: loginData.role
       });
 
       console.log(response.data);
 
-      let name=response.data.data.full_name
-      let email=response.data.data.email
-      let token=response.data.token
+      let name = response.data.data.full_name
+      let email = response.data.data.email
+      let token = response.data.token
 
       setTimeout(() => {
-        localStorage.setItem("JWT",token)//save token to local storage
-        navigate('/home',{state:{name,email}})
+        localStorage.setItem("JWT", token)//save token to local storage
+        navigate('/home', { state: { name, email } })
       }, 2000);
 
     } catch (e: any) {
 
       if (e.response && e.response.status === 401) {
-        alert("Invalid Email or Password");
+        alert("Invalid Email or Password or role");
       }
       else if (e.response.status === 400) {
         // This catches the CAPTCHA failure message from the backend
@@ -86,17 +87,14 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
       else {
         console.log("Something went wrong. Please try again.");
         console.error("Login Error:", e);
+        alert('Something went wrong. Please try again.')
       }
     }
   };
 
-
-
-
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     fetchData();
-
   }
 
   const handleGuestLogin = () => {
@@ -137,7 +135,7 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
         </div>
 
         {/* Password */}
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="block text-gray-700 text-sm font-semibold mb-2">
             Password
           </label>
@@ -147,6 +145,22 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
             value={loginData.password}
             onChange={handleChange}
             placeholder="********"
+            className="shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            required
+          />
+        </div>
+
+        {/* Role */}
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">
+            Role
+          </label>
+          <input
+            type="text"
+            name="role"
+            value={loginData.role}
+            onChange={handleChange}
+            placeholder="QA/Dev/SRE"
             className="shadow border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
           />
