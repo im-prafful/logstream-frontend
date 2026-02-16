@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import ReCAPTCHA from "react-google-recaptcha";
+import { useAuth } from "../hooks/useAuth";
 
 interface Props {
   onClose: () => void;
@@ -15,6 +16,7 @@ interface LoginData {
 }
 
 const LoginForm: React.FC<Props> = ({ onClose }) => {
+  const { login } = useAuth();
   const [loginData, setLoginData] = useState<LoginData>({
     email: "",
     password: "",
@@ -66,13 +68,12 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
 
       console.log(response.data);
 
-      let name = response.data.data.full_name
-      let email = response.data.data.email
-      let token = response.data.token
+      const { data: userData, token } = response.data;
+
 
       setTimeout(() => {
-        localStorage.setItem("JWT", token)//save token to local storage
-        navigate('/home', { state: { name, email } })
+        login(userData, token);
+        navigate('/home');
       }, 2000);
 
     } catch (e: any) {

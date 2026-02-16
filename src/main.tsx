@@ -5,53 +5,61 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import './index.css'
 import App from './App'
 import { LoginRouteWrapper, SignupRouteWrapper } from './Components/routeWrapper'
-import {Home} from './home'
-import {UserDisp} from "./userDashboard"
-import { ProtectedRoute } from './Components/ProtectedRoute'
+import { Home } from './home'
+import { UserDisp } from "./userDashboard"
+import { AccessControl } from './Components/AccessControl'
 import ExploreClusters from './ExploreClusters'
+import { AuthProvider } from './context/AuthContext'
+import AccessDenied from './Components/AccessDenied'
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />, 
+    element: <App />,
   },
   {
     path: "/login",
-    element: <LoginRouteWrapper />, 
+    element: <LoginRouteWrapper />,
   },
   {
     path: "/signup",
-    element: <SignupRouteWrapper />, 
+    element: <SignupRouteWrapper />,
   },
   {
     path: "/home",
     element: (
-      <ProtectedRoute>
-        <Home /> 
-      </ProtectedRoute>
+      <AccessControl>
+        <Home />
+      </AccessControl>
     )
   },
-{
-  path: "/userDashboard",
-  element: (
-    <ProtectedRoute>
-      <UserDisp />
-    </ProtectedRoute>
-  )
-},
-{
-  path:"/clustersExplore",
-  element:(
-    <ProtectedRoute>
-      <ExploreClusters/>
-    </ProtectedRoute>
-  )
-}
+  {
+    path: "/userDashboard",
+    element: (
+      <AccessControl requiredPermission="view_logs">
+        <UserDisp />
+      </AccessControl>
+    )
+  },
+  {
+    path: "/clustersExplore",
+    element: (
+      <AccessControl requiredPermission="view_clusters">
+        <ExploreClusters />
+      </AccessControl>
+    )
+  },
+  {
+    path: "/access-denied",
+    element: <AccessDenied />
+  }
 
 ]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>,
 )

@@ -1,16 +1,16 @@
-import React, { useState, type ChangeEvent, type FormEvent } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from './hooks/useAuth';
 
 export const Home = () => {
-    
 
-    const location = useLocation();
-    const { name, email } = location.state || {}; 
+    const { user } = useAuth();
+    const name = user?.full_name;
+    const email = user?.email;
 
-    const navigate=useNavigate()
+    const navigate = useNavigate()
 
-    const handleClick=()=>{
+    const handleClick = () => {
         navigate('/userDashboard')
     }
     // --- Framer Motion Animation Variants (Non-business logic, only styling) ---
@@ -20,36 +20,36 @@ export const Home = () => {
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.2 
+                staggerChildren: 0.2
             }
         }
     };
 
     const itemVariants = {
         hidden: { y: 20, opacity: 0 },
-        visible: { 
-            y: 0, 
+        visible: {
+            y: 0,
             opacity: 1,
-            transition: { type: "spring", stiffness: 100 }
+            transition: { type: "spring" as const, stiffness: 100 }
         }
     };
 
     // --- Render Component ---
 
     return (
-        <motion.div 
+        <motion.div
             className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
         >
             {/* --- Welcome Card --- */}
-            <motion.div 
+            <motion.div
                 className="bg-white p-10 md:p-12 rounded-2xl shadow-2xl w-full max-w-lg text-center"
-                variants={itemVariants} 
+                variants={itemVariants}
             >
                 {/* 1. Main Welcome Message (Bigger, Bolder) */}
-                <motion.h1 
+                <motion.h1
                     className="text-4xl font-extrabold text-indigo-600 mb-2"
                     variants={itemVariants}
                 >
@@ -61,15 +61,15 @@ export const Home = () => {
                     className="text-5xl font-extrabold text-gray-900 mb-6"
                     variants={itemVariants}
                 >
-                    {name || 'Guest!'} 
+                    {name || 'Guest!'}
                 </motion.div>
 
                 {/* 3. Divider Line */}
-                <motion.hr 
+                <motion.hr
                     className="border-gray-200 mb-6 w-1/3 mx-auto"
                     variants={itemVariants}
                 />
-                
+
                 {/* 4. User Email */}
                 <motion.div
                     className="text-lg text-gray-500 mb-8"
@@ -84,7 +84,7 @@ export const Home = () => {
                 <motion.button
                     className="w-full bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 cursor-pointer"
                     variants={itemVariants}
-                    whileHover={{ scale: 1.05 }} 
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleClick}
                 >
@@ -102,7 +102,7 @@ export const Home = () => {
             >
                 This session is securely authenticated.
             </motion.p>
-            
+
         </motion.div>
     );
 };
