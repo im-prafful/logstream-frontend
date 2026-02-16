@@ -11,6 +11,9 @@ import { AccessControl } from './Components/AccessControl'
 import ExploreClusters from './ExploreClusters'
 import { AuthProvider } from './context/AuthContext'
 import AccessDenied from './Components/AccessDenied'
+import SrePage from './SrePage'
+import DevPage from './DevPage'
+import QaPage from './QaPage'
 
 const router = createBrowserRouter([
   {
@@ -52,6 +55,30 @@ const router = createBrowserRouter([
   {
     path: "/access-denied",
     element: <AccessDenied />
+  },
+  {
+    path: "/sre",
+    element: (
+      <AccessControl requiredRole="SRE">
+        <SrePage />
+      </AccessControl>
+    )
+  },
+  {
+    path: "/dev",
+    element: (
+      <AccessControl requiredRole="Dev">
+        <DevPage />
+      </AccessControl>
+    )
+  },
+  {
+    path: "/qa",
+    element: (
+      <AccessControl requiredRole="QA">
+        <QaPage />
+      </AccessControl>
+    )
   }
 
 ]);

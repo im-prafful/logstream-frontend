@@ -73,7 +73,7 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
 
       setTimeout(() => {
         login(userData, token);
-        navigate('/home');
+        navigate('/home', { replace: true });
       }, 2000);
 
     } catch (e: any) {

@@ -16,13 +16,17 @@ interface AuthContextType {
     logout: () => void;
     hasPermission: (permission: string) => boolean;
     isAuthenticated: boolean;
+    isLoading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+
+
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
     // Load from localStorage on mount or refresh....Otherwise refresh → state resets → AccessControl thinks you're logged out.
     useEffect(() => {
@@ -39,6 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 localStorage.removeItem('USER_DATA');
             }
         }
+        setIsLoading(false);
     }, []);
 
     const login = (userData: User, token: string) => {
@@ -61,7 +66,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, hasPermission, isAuthenticated: !!token }}>
+        <AuthContext.Provider value={{ user, token, login, logout, hasPermission, isAuthenticated: !!token, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

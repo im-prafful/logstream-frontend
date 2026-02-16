@@ -15,7 +15,11 @@ export const AccessControl: React.FC<AccessControlProps> = ({
     requiredRole,
 
 }) => {
-    const { user, isAuthenticated } = useAuth();
+    const { user, isAuthenticated, isLoading } = useAuth();
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
@@ -27,12 +31,12 @@ export const AccessControl: React.FC<AccessControlProps> = ({
     }
 
     // Check Role
-    if (requiredRole && user.role !== requiredRole) {
+    if (requiredRole && user.role.toLowerCase() !== requiredRole.toLowerCase()) {
         return <>{<AccessDenied />}</>;
     }
 
     // Check Permission
-    if (requiredPermission && (!user.permissions || !user.permissions.includes(requiredPermission))) {
+    if (requiredPermission && (!user.permissions || !user.permissions.map((permission) => permission.toLowerCase()).includes(requiredPermission.toLowerCase()))) {
         return <>{<AccessDenied />}</>;
     }
 
