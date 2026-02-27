@@ -12,8 +12,9 @@ import ExploreClusters from './ExploreClusters'
 import { AuthProvider } from './context/AuthContext'
 import AccessDenied from './Components/AccessDenied'
 import SrePage from './SrePage'
-import DevPage from './DevPage'
+
 import QaPage from './QaPage'
+import View_Incidents from './Components/View_Incidents'
 
 const router = createBrowserRouter([
   {
@@ -65,10 +66,10 @@ const router = createBrowserRouter([
     )
   },
   {
-    path: "/dev",
+    path: "/view_inc",
     element: (
-      <AccessControl requiredRole="Dev">
-        <DevPage />
+      <AccessControl requiredPermission='manage_incidents'>
+        <View_Incidents/>
       </AccessControl>
     )
   },

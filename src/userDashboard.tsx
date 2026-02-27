@@ -591,6 +591,37 @@ export const UserDisp = () => {
 
                 </motion.div>
             </main>
+
+            <div className="mt-14">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        console.log("Email");
+                    }}
+                    className="w-full max-w-md mx-auto bg-white p-5 rounded-2xl shadow-lg border border-gray-200"
+                >
+                    {/* Top Text */}
+                    <p className="text-sm font-semibold text-gray-700 mb-4 ml-6">
+                        Subscribe to receive email-alerts
+                    </p>
+
+                    {/* Input + Button Row */}
+                    <div className="flex items-center gap-4">
+                        <input
+                            type="text"
+                            placeholder="Enter your email"
+                            className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        />
+
+                        <button
+                            type="submit"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-md shadow-blue-200"
+                        >
+                            Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     )
 }

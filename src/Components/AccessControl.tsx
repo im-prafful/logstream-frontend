@@ -1,19 +1,12 @@
-import React, { type ReactNode } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AccessDenied from './AccessDenied';
 
-interface AccessControlProps {
-    children: ReactNode;
-    requiredPermission?: string;
-    requiredRole?: string;
-}
-
-export const AccessControl: React.FC<AccessControlProps> = ({
+export const AccessControl = ({
     children,
     requiredPermission,
     requiredRole,
-
 }) => {
     const { user, isAuthenticated, isLoading } = useAuth();
 
@@ -26,18 +19,23 @@ export const AccessControl: React.FC<AccessControlProps> = ({
     }
 
     if (!user) {
-        // Authenticated but no user data yet (shouldn't happen with our logic, but safe guard)
         return <Navigate to="/login" replace />;
     }
 
     // Check Role
-    if (requiredRole && user.role.toLowerCase() !== requiredRole.toLowerCase()) {
-        return <>{<AccessDenied />}</>;
+    if (
+        requiredRole &&
+        user.role?.toLowerCase() !== requiredRole.toLowerCase()
+    ) {
+        return <AccessDenied />;
     }
 
     // Check Permission
-    if (requiredPermission && (!user.permissions || !user.permissions.map((permission) => permission.toLowerCase()).includes(requiredPermission.toLowerCase()))) {
-        return <>{<AccessDenied />}</>;
+    if (
+        requiredPermission &&
+        (!user.permissions || !user.permissions[requiredPermission])
+    ) {
+        return <AccessDenied />;
     }
 
     // Access Granted
