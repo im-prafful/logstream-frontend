@@ -30,7 +30,7 @@ export const AccessControl = ({
         return <AccessDenied />;
     }
 
-    // Check Permission
+    // Check Permission-flat permissions
     if (
         requiredPermission &&
         (!user.permissions || !user.permissions[requiredPermission])

@@ -11,6 +11,7 @@ export const UserDisp = () => {
     const [loading, setLoading] = useState(true)
     const [logsPerCluster, setLogsPerCluster] = useState([])
 
+    const navigate = useNavigate()
 
     const [filterParams, setFilterParams] = useState({
         lvl: '',
@@ -63,10 +64,6 @@ export const UserDisp = () => {
         }
     }
 
-
-
-    const navigate = useNavigate()
-
     const formatTimestamp = (isoString) => {
         if (!isoString) return "-"
         const date = new Date(isoString)
@@ -113,7 +110,6 @@ export const UserDisp = () => {
 
                 console.log(response.data)
                 setLogs(response.data.logs || [])
-                //setCategoryLogs(response.data.rows || [])
                 setLogsPerCategory(response.data.logs_per_category || [])
                 setLogsPerCluster(response.data.logs_per_cluster || [])
                 setLoading(false)
@@ -360,7 +356,7 @@ export const UserDisp = () => {
                     {/* Explore Clusters Button */}
                     <motion.button
                         onClick={handleExploreClick}
-                        className="relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold rounded-lg shadow-lg overflow-hidden"
+                        className="relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold rounded-lg shadow-lg overflow-hidden cursor-pointer"
                         whileHover={{ scale: 1.05, boxShadow: "0 10px 40px rgba(124, 58, 237, 0.4)" }}
                         whileTap={{ scale: 0.95 }}
                     >
@@ -386,6 +382,37 @@ export const UserDisp = () => {
                             className="w-2 h-2 bg-yellow-300 rounded-full"
                         />
                     </motion.button>
+
+                    {/*Manage incidents button*/}
+                    <motion.button
+                        onClick={() => navigate('/incidents')}
+                        className="relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-bold rounded-lg shadow-lg overflow-hidden cursor-pointer"
+                        whileHover={{ scale: 1.05, boxShadow: "0 10px 40px rgba(239, 68, 68, 0.4)" }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <motion.div
+                            className="absolute inset-0 bg-white"
+                            initial={{ x: "-100%" }}
+                            whileHover={{ x: "100%" }}
+                            transition={{ duration: 0.5 }}
+                            style={{ opacity: 0.2 }}
+                        />
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Manage Incidents</span>
+                        <motion.div
+                            animate={{
+                                scale: [1, 1.3, 1],
+                                opacity: [1, 0.6, 1]
+                            }}
+                            transition={{
+                                duration: 1.5,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }}
+                            className="w-2 h-2 bg-yellow-300 rounded-full"
+                        />
+                    </motion.button>
+
 
                     <motion.button
                         onClick={handleLogout}
