@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { AlertCircle, TrendingUp, Layers, Activity, Clock, LogOut, List, Zap, Sparkles } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
+import { useAuth } from "./hooks/useAuth"
 
 export const UserDisp = () => {
     const [logs, setLogs] = useState([])
@@ -12,6 +13,8 @@ export const UserDisp = () => {
     const [logsPerCluster, setLogsPerCluster] = useState([])
 
     const navigate = useNavigate()
+    const {user}=useAuth()
+    //console.log(user)
 
     const [filterParams, setFilterParams] = useState({
         lvl: '',
@@ -424,6 +427,23 @@ export const UserDisp = () => {
                     </motion.button>
                 </div>
             </motion.header>
+            <div className="max-w-7xl mx-auto px-6 mt-6">
+                <div className="inline-flex items-center gap-4 rounded-2xl border border-indigo-100 bg-white px-4 py-3 shadow-md">
+                    <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-black text-lg flex items-center justify-center shadow-sm">
+                        {(user?.full_name?.[0] || "U").toUpperCase()}
+                    </div>
+
+                    <div className="leading-tight">
+                        <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Signed in as</p>
+                        <p className="font-bold text-slate-900 text-2xl">{user?.full_name || "User"}</p>
+                    </div>
+
+                    <span className="ml-1 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
+                        {user?.role || "guest"}
+                    </span>
+                </div>
+            </div>
+
 
             <main className="max-w-7xl mx-auto px-6 mt-8">
                 {/* 1. Global Stats */}

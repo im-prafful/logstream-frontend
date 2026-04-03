@@ -13,7 +13,7 @@ export const LoginRouteWrapper = () => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/userDashboard" replace />;
   }
 
   return (
@@ -33,7 +33,7 @@ export const SignupRouteWrapper = () => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/userDashboard" replace />;
   }
 
   return (

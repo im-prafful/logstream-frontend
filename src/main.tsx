@@ -1,11 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
 import './index.css'
 import App from './App'
 import { LoginRouteWrapper, SignupRouteWrapper } from './Components/routeWrapper'
-import { Home } from './home'
 import { UserDisp } from "./userDashboard"
 import { AccessControl } from './Components/AccessControl'
 import ExploreClusters from './ExploreClusters'
@@ -28,11 +27,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/home",
-    element: (
-      <AccessControl>
-        <Home />
-      </AccessControl>
-    )
+    element: <Navigate to="/userDashboard" replace />,
   },
   {
     path: "/userDashboard",

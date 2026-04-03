@@ -80,10 +80,10 @@ const AccessDenied = () => {
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <button
-                        onClick={() => navigate('/home')}
+                        onClick={() => navigate('/userDashboard')}
                         className="w-full sm:w-auto px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-all transform hover:scale-105 shadow-lg shadow-red-200 active:scale-95 cursor-pointer"
                     >
-                        Go to HOME
+                        Go to Dashboard
                     </button>
                 </div>
             </div>

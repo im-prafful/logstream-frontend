@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Eye, Plus, Trash2, ArrowLeft, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../hooks/useAuth'
 
 type ActiveTab = 'view' | 'create' | 'delete'
-type IncidentStatus = 'open' | 'in_progress' | 'resolved'
+type IncidentStatus = 'NEW' | 'IN_PROGRESS' | 'RESOLVED' | 'open' | 'in_progress' | 'resolved'
 
 interface Incident {
   incident_id: string
@@ -25,6 +25,8 @@ const View_Incidents = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('view')
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
+  const [isViewing, setIsViewing] = useState(false)
+  const [viewError, setViewError] = useState('')
   const [deleteIncidentId, setDeleteIncidentId] = useState('')
   const [deleteError, setDeleteError] = useState('')
   const [createError, setCreateError] = useState('')
@@ -103,6 +105,63 @@ const View_Incidents = () => {
 
   }
 
+  const handleViewInc = async () => {
+    if (!token) {
+      setViewError('Authentication token missing. Please login again.')
+      return
+    }
+
+    try {
+      setIsViewing(true)
+      setViewError('')
+
+      // role is embedded in JWT, so only Bearer token is required
+      const response = await axios.get(
+        'https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/incidents',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+      console.log(response.data)
+
+      
+      const rows =
+        response?.data?.incidents ??
+        response?.data?.data ??
+        response?.data ??
+        []
+      const mappedIncidents: Incident[] = Array.isArray(rows)
+        ? rows.map((row: any) => ({
+            incident_id: String(row?.incident_id ?? ''),
+            cluster_id: Number(row?.cluster_id ?? 0),
+            status: (row?.status ?? 'NEW') as IncidentStatus,
+            assigned_role: String(row?.assigned_role ?? ''),
+            assigned_to: String(row?.assigned_to ?? ''),
+            created_at: String(row?.created_at ?? ''),
+            updated_at: row?.updated_at ? String(row.updated_at) : '',
+            resolved_at: row?.resolved_at ? String(row.resolved_at) : null
+          }))
+        : []
+
+      setIncidents(mappedIncidents)
+    } catch (e: any) {
+      setViewError(
+        e?.response?.data?.message || 'Failed to fetch incidents. Please try again.'
+      )
+    } finally {
+      setIsViewing(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'view') {
+      handleViewInc()
+    }
+  }, [activeTab, token])
+
+
   const handleDeleteSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setDeleteError('')
@@ -126,11 +185,32 @@ const View_Incidents = () => {
     setDeleteIncidentId('')
   }
 
+  const getStatusPillClasses = (status: string) => {
+    const normalized = status.toLowerCase()
+    if (normalized === 'new' || normalized === 'open') {
+      return 'bg-amber-100 text-amber-800 border border-amber-200'
+    }
+    if (normalized === 'in_progress') {
+      return 'bg-blue-100 text-blue-800 border border-blue-200'
+    }
+    if (normalized === 'resolved') {
+      return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+    }
+    return 'bg-gray-100 text-gray-700 border border-gray-200'
+  }
+
+  const formatDateTime = (value: string | null) => {
+    if (!value) return 'Not available'
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return value
+    return parsed.toLocaleString()
+  }
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-20">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,#e0f2fe_0%,#f8fafc_40%,#eef2ff_100%)] pb-20">
 
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-40 shadow-sm">
+      <header className="backdrop-blur-md bg-white/80 border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/userDashboard')}
@@ -153,13 +233,13 @@ const View_Incidents = () => {
 
         {/* Tabs */}
         <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-2 p-1.5 bg-gray-100/80 rounded-xl">
+          <div className="flex items-center gap-2 p-1.5 bg-white/80 border border-gray-200 shadow-sm rounded-xl">
 
             <button
               onClick={() => setActiveTab('view')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                 activeTab === 'view'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg'
                   : 'text-gray-500 hover:text-gray-700 hover:bg-white/60'
                 }`}
             >
@@ -194,13 +274,23 @@ const View_Incidents = () => {
           </div>
         </div>
 
+
+
         {/* View Tab */}
         {activeTab === 'view' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <section className="lg:col-span-2 bg-white border rounded-xl shadow-sm p-5">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Incident List</h2>
 
-              {incidents.length === 0 ? (
+              {isViewing && (
+                <p className="text-sm text-gray-500 mb-4">Loading incidents...</p>
+              )}
+
+              {viewError && (
+                <p className="text-sm text-red-600 mb-4">{viewError}</p>
+              )}
+
+              {!isViewing && incidents.length === 0 ? (
                 <p className="text-gray-400 py-10 text-center">
                   No incidents found.
                 </p>
@@ -209,19 +299,22 @@ const View_Incidents = () => {
                   {incidents.map((incident) => (
                     <div
                       key={incident.incident_id}
-                      className="border rounded-lg p-4 flex items-center justify-between gap-4"
+                      className="rounded-xl p-4 md:p-5 flex items-center justify-between gap-4 border border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-sm hover:shadow-md hover:border-blue-200 transition-all"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm text-gray-500">Incident ID</p>
-                        <p className="font-semibold text-gray-800 truncate">{incident.incident_id}</p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Cluster #{incident.cluster_id} � Status: {incident.status}
-                        </p>
+                        <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold">Incident ID</p>
+                        <p className="font-semibold text-gray-900 truncate text-xl">{incident.incident_id}</p>
+                        <div className="mt-2 flex items-center gap-2 flex-wrap">
+                          <span className="text-sm text-gray-600 font-medium">Cluster #{incident.cluster_id}</span>
+                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${getStatusPillClasses(incident.status)}`}>
+                            {incident.status}
+                          </span>
+                        </div>
                       </div>
 
                       <button
                         onClick={() => setSelectedIncident(incident)}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium cursor-pointer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold cursor-pointer transition-colors"
                       >
                         <Eye className="w-4 h-4" />
                         View
@@ -232,26 +325,40 @@ const View_Incidents = () => {
               )}
             </section>
 
-            <section className="bg-white border rounded-xl shadow-sm p-5">
+            <section className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Incident Details</h2>
 
               {!selectedIncident ? (
                 <p className="text-gray-400 py-10 text-center">Select an incident to view details.</p>
               ) : (
-                <div className="space-y-2 text-sm">
-                  <p><span className="font-semibold text-gray-700">Incident ID:</span> {selectedIncident.incident_id}</p>
-                  <p><span className="font-semibold text-gray-700">Cluster ID:</span> {selectedIncident.cluster_id}</p>
-                  <p><span className="font-semibold text-gray-700">Status:</span> {selectedIncident.status}</p>
-                  <p><span className="font-semibold text-gray-700">Assigned Role:</span> {selectedIncident.assigned_role}</p>
-                  <p><span className="font-semibold text-gray-700">Assigned To:</span> {selectedIncident.assigned_to || 'Unassigned'}</p>
-                  <p><span className="font-semibold text-gray-700">Created At:</span> {selectedIncident.created_at}</p>
-                  <p><span className="font-semibold text-gray-700">Updated At:</span> {selectedIncident.updated_at}</p>
-                  <p><span className="font-semibold text-gray-700">Resolved At:</span> {selectedIncident.resolved_at || 'Not resolved'}</p>
+                <div className="space-y-3 text-sm">
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                    <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1">Incident ID</p>
+                    <p className="font-semibold text-slate-900 break-all">{selectedIncident.incident_id}</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2">
+                    <p><span className="font-semibold text-gray-700">Cluster ID:</span> {selectedIncident.cluster_id}</p>
+                    <p>
+                      <span className="font-semibold text-gray-700">Status:</span>{' '}
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getStatusPillClasses(selectedIncident.status)}`}>
+                        {selectedIncident.status}
+                      </span>
+                    </p>
+                    <p><span className="font-semibold text-gray-700">Assigned Role:</span> {selectedIncident.assigned_role || 'N/A'}</p>
+                    <p><span className="font-semibold text-gray-700">Assigned To:</span> {selectedIncident.assigned_to || 'Unassigned'}</p>
+                    <p><span className="font-semibold text-gray-700">Created At:</span> {formatDateTime(selectedIncident.created_at)}</p>
+                    <p><span className="font-semibold text-gray-700">Updated At:</span> {formatDateTime(selectedIncident.updated_at)}</p>
+                    <p><span className="font-semibold text-gray-700">Resolved At:</span> {formatDateTime(selectedIncident.resolved_at)}</p>
+                  </div>
                 </div>
               )}
             </section>
           </div>
         )}
+
+
+
 
         {/* Create Tab */}
         {activeTab === 'create' && (
@@ -321,6 +428,11 @@ const View_Incidents = () => {
             </form>
           </div>
         )}
+
+
+
+
+
 
         {/* Delete Tab */}
         {activeTab === 'delete' && (
