@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Eye, Plus, Trash2, ArrowLeft, AlertCircle } from 'lucide-react'
+import { Eye, Plus, ArrowLeft, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../hooks/useAuth'
 
-type ActiveTab = 'view' | 'create' | 'delete'
+type ActiveTab = 'view' | 'create'
 type IncidentStatus = 'NEW' | 'IN_PROGRESS' | 'RESOLVED' | 'open' | 'in_progress' | 'resolved'
 
 interface Incident {
@@ -27,8 +27,6 @@ const View_Incidents = () => {
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
   const [isViewing, setIsViewing] = useState(false)
   const [viewError, setViewError] = useState('')
-  const [deleteIncidentId, setDeleteIncidentId] = useState('')
-  const [deleteError, setDeleteError] = useState('')
   const [createError, setCreateError] = useState('')
   const [createSuccess, setCreateSuccess] = useState('')
   const [isCreating, setIsCreating] = useState(false)
@@ -158,32 +156,10 @@ const View_Incidents = () => {
   useEffect(() => {
     if (activeTab === 'view') {
       handleViewInc()
+      const sessionStorageData=JSON.parse(sessionStorage.getItem('Current Incident'))
+      setSelectedIncident(sessionStorageData)
     }
   }, [activeTab, token])
-
-
-  const handleDeleteSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setDeleteError('')
-
-    const normalizedId = deleteIncidentId.trim()
-    if (!normalizedId) {
-      setDeleteError('Incident ID is required.')
-      return
-    }
-
-    const exists = incidents.some(incident => incident.incident_id === normalizedId)
-    if (!exists) {
-      setDeleteError('Incident not found.')
-      return
-    }
-
-    setIncidents(prev => prev.filter(incident => incident.incident_id !== normalizedId))
-    if (selectedIncident?.incident_id === normalizedId) {
-      setSelectedIncident(null)
-    }
-    setDeleteIncidentId('')
-  }
 
   const getStatusPillClasses = (status: string) => {
     const normalized = status.toLowerCase()
@@ -257,18 +233,6 @@ const View_Incidents = () => {
             >
               <Plus className="w-4 h-4" />
               Create Incident
-            </button>
-
-            <button
-              onClick={() => setActiveTab('delete')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === 'delete'
-                  ? 'bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/60'
-                }`}
-            >
-              <Trash2 className="w-4 h-4" />
-              Delete Incident
             </button>
 
           </div>
@@ -351,7 +315,19 @@ const View_Incidents = () => {
                     <p><span className="font-semibold text-gray-700">Updated At:</span> {formatDateTime(selectedIncident.updated_at)}</p>
                     <p><span className="font-semibold text-gray-700">Resolved At:</span> {formatDateTime(selectedIncident.resolved_at)}</p>
                   </div>
+                  <button
+                    onClick={() => { 
+                      sessionStorage.setItem('Current Incident',JSON.stringify(selectedIncident))
+                      
+                      navigate('/editInc') 
+
+                    }}
+                    className="mt-2 w-full inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg active:scale-[0.98] cursor-pointer"
+                  >
+                    Edit Incident
+                  </button>
                 </div>
+                
               )}
             </section>
           </div>
@@ -425,47 +401,6 @@ const View_Incidents = () => {
                 <p className="text-sm text-emerald-700">{createSuccess}</p>
               )}
 
-            </form>
-          </div>
-        )}
-
-
-
-
-
-
-        {/* Delete Tab */}
-        {activeTab === 'delete' && (
-          <div className="flex justify-center">
-            <form
-              onSubmit={handleDeleteSubmit}
-              className="flex flex-col gap-4 w-full max-w-md bg-white p-6 rounded-xl shadow-sm border"
-            >
-              <h2 className="text-lg font-semibold text-gray-800">Delete Incident</h2>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-semibold text-gray-700">
-                  Incident ID
-                </label>
-                <input
-                  type="text"
-                  value={deleteIncidentId}
-                  onChange={(e) => setDeleteIncidentId(e.target.value)}
-                  placeholder="Enter incident UUID"
-                  className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
-              </div>
-
-              {deleteError && (
-                <p className="text-sm text-red-600">{deleteError}</p>
-              )}
-
-              <button
-                type="submit"
-                className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition-all cursor-pointer"
-              >
-                Delete Incident
-              </button>
             </form>
           </div>
         )}

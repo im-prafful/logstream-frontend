@@ -1,0 +1,1 @@
+EditInc.tsx->  if one entry is added inn historoy new option should be disabled

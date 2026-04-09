@@ -11,6 +11,7 @@ import ExploreClusters from './pages/ExploreClusters'
 import { AuthProvider } from './context/AuthContext'
 import AccessDenied from './Components/AccessDenied'
 import View_Incidents from './Components/View_Incidents'
+import EditIncidents from './pages/EditIncidents'
 
 const router = createBrowserRouter([
   {
@@ -54,6 +55,14 @@ const router = createBrowserRouter([
     element: (
       <AccessControl requiredPermission='manage_incidents'>
         <View_Incidents/>
+      </AccessControl>
+    )
+  },
+  {
+    path: "/editInc",
+    element: (
+      <AccessControl requiredPermission='manage_incidents'>
+        <EditIncidents/>
       </AccessControl>
     )
   }
