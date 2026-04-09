@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import SignupForm from "./Components/signupForm";
-import LoginForm from "./Components/loginForm"
+import SignupForm from "../Components/signupForm";
+import LoginForm from "../Components/loginForm"
 
 const App: React.FC = () => {
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);

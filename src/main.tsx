@@ -3,11 +3,11 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
 import './index.css'
-import App from './App'
+import App from './pages/App'
 import { LoginRouteWrapper, SignupRouteWrapper } from './Components/routeWrapper'
-import { UserDisp } from "./userDashboard"
+import { UserDisp } from "./pages/userDashboard"
 import { AccessControl } from './Components/AccessControl'
-import ExploreClusters from './ExploreClusters'
+import ExploreClusters from './pages/ExploreClusters'
 import { AuthProvider } from './context/AuthContext'
 import AccessDenied from './Components/AccessDenied'
 import View_Incidents from './Components/View_Incidents'

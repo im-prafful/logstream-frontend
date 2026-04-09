@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { AlertCircle, TrendingUp, Layers, Activity, Clock, LogOut, List, Zap, Sparkles } from "lucide-react"
+import { AlertCircle, Activity, Clock, LogOut, List, Zap, Sparkles } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
-import { useAuth } from "./hooks/useAuth"
+import { useAuth } from "../hooks/useAuth"
+import CategoryStats from "../Components/CategoryStats"
+import PieChart from "../Components/PieChart"
+import BarChart from "../Components/BarChart"
 
 export const UserDisp = () => {
     const [logs, setLogs] = useState([])
@@ -169,161 +172,6 @@ export const UserDisp = () => {
         }
     }
 
-    // --- SUB-COMPONENTS ---
-
-    const CategoryStats = () => (
-        <motion.div
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-        >
-            {logsPerCategory.map((cat, idx) => {
-                const percentage = ((parseInt(cat.tc) / totalLogs) * 100).toFixed(1)
-                return (
-                    <motion.div
-                        key={idx}
-                        className="bg-white rounded-xl p-5 shadow-sm border border-gray-100"
-                        variants={itemVariants}
-                        whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
-                        whileTap={{ scale: 0.98 }}
-                    >
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
-                                style={{ color: getLevelColor(cat.lvl), backgroundColor: getLevelBgColor(cat.lvl) }}>
-                                {cat.lvl}
-                            </span>
-                            <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                            >
-                                <Activity className="w-4 h-4" style={{ color: getLevelColor(cat.lvl) }} />
-                            </motion.div>
-                        </div>
-                        <motion.div
-                            className="text-3xl font-bold text-gray-800"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: idx * 0.1 + 0.3, type: "spring", stiffness: 200 }}
-                        >
-                            {cat.tc}
-                        </motion.div>
-                        <div className="text-xs text-gray-400 mt-1">{percentage}% of total volume</div>
-                    </motion.div>
-                )
-            })}
-        </motion.div>
-    )
-
-    const PieChart = () => {
-        let cumulativePercent = 0
-        const gradientSlices = logsPerCategory.map(cat => {
-            const percent = (parseInt(cat.tc) / totalLogs) * 100
-            const start = cumulativePercent
-            cumulativePercent += percent
-            return `${getLevelColor(cat.lvl)} ${start}% ${cumulativePercent}%`
-        }).join(', ')
-
-        return (
-            <motion.div
-                className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-full"
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-            >
-                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-8 flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-purple-600" /> Distribution
-                </h3>
-                <div className="flex flex-col items-center">
-                    <motion.div
-                        className="relative w-48 h-48 rounded-full shadow-inner mb-8"
-                        style={{ background: `conic-gradient(${gradientSlices})` }}
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ duration: 1, type: "spring" }}
-                    >
-                        <div className="absolute inset-8 bg-white rounded-full flex flex-col items-center justify-center shadow-lg">
-                            <motion.span
-                                className="text-2xl font-black text-gray-800"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.8 }}
-                            >
-                                {totalLogs}
-                            </motion.span>
-                            <span className="text-[10px] text-gray-400 uppercase font-bold">Total Logs</span>
-                        </div>
-                    </motion.div>
-                    <motion.div
-                        className="w-full grid grid-cols-2 gap-2"
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="visible"
-                    >
-                        {logsPerCategory.map((cat, idx) => (
-                            <motion.div
-                                key={idx}
-                                className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
-                                variants={itemVariants}
-                                whileHover={{ backgroundColor: "#f3f4f6", scale: 1.05 }}
-                            >
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getLevelColor(cat.lvl) }} />
-                                <span className="text-xs font-medium text-gray-600 capitalize">{cat.lvl}</span>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                </div>
-            </motion.div>
-        )
-    }
-
-    const BarChart = () => {
-        const maxCount = Math.max(...logsPerCategory.map(cat => parseInt(cat.tc)))
-        return (
-            <motion.div
-                className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-full"
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-            >
-                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-8 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-purple-600" /> Comparison
-                </h3>
-                <div className="space-y-5">
-                    {logsPerCategory.map((cat, idx) => (
-                        <motion.div
-                            key={idx}
-                            className="space-y-1"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                        >
-                            <div className="flex justify-between text-xs font-bold text-gray-600 uppercase">
-                                <span>{cat.lvl}</span>
-                                <motion.span
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: idx * 0.1 + 0.3 }}
-                                >
-                                    {cat.tc}
-                                </motion.span>
-                            </div>
-                            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                                <motion.div
-                                    className="h-full"
-                                    style={{ backgroundColor: getLevelColor(cat.lvl) }}
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${(parseInt(cat.tc) / maxCount) * 100}%` }}
-                                    transition={{ duration: 1, delay: idx * 0.1, ease: "easeOut" }}
-                                />
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-            </motion.div>
-        )
-    }
-
     if (loading) return (
         <div className="flex items-center justify-center min-h-screen bg-gray-50">
             <motion.div
@@ -447,12 +295,32 @@ export const UserDisp = () => {
 
             <main className="max-w-7xl mx-auto px-6 mt-8">
                 {/* 1. Global Stats */}
-                <CategoryStats />
+                <CategoryStats
+                    logsPerCategory={logsPerCategory}
+                    totalLogs={totalLogs}
+                    getLevelColor={getLevelColor}
+                    getLevelBgColor={getLevelBgColor}
+                    containerVariants={containerVariants}
+                    itemVariants={itemVariants}
+                />
 
                 {/* 2. Charts Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-                    <div className="lg:col-span-1"><PieChart /></div>
-                    <div className="lg:col-span-2"><BarChart /></div>
+                    <div className="lg:col-span-1">
+                        <PieChart
+                            logsPerCategory={logsPerCategory}
+                            totalLogs={totalLogs}
+                            getLevelColor={getLevelColor}
+                            containerVariants={containerVariants}
+                            itemVariants={itemVariants}
+                        />
+                    </div>
+                    <div className="lg:col-span-2">
+                        <BarChart
+                            logsPerCategory={logsPerCategory}
+                            getLevelColor={getLevelColor}
+                        />
+                    </div>
                 </div>
 
                 {/* 3. Latest Logs Grid (Top 5) */}
