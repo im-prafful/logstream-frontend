@@ -264,6 +264,22 @@ export const UserDisp = () => {
                         />
                     </motion.button>
 
+                    <motion.button
+                        onClick={() => navigate('/about')}
+                        className="relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-sm font-bold rounded-lg shadow-lg overflow-hidden cursor-pointer"
+                        whileHover={{ scale: 1.05, boxShadow: "0 10px 40px rgba(37, 99, 235, 0.35)" }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <motion.div
+                            className="absolute inset-0 bg-white"
+                            initial={{ x: "-100%" }}
+                            whileHover={{ x: "100%" }}
+                            transition={{ duration: 0.5 }}
+                            style={{ opacity: 0.2 }}
+                        />
+                        <span>About</span>
+                    </motion.button>
+
 
                     <motion.button
                         onClick={handleLogout}

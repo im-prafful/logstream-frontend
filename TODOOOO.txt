@@ -1,1 +1,3 @@
-EditInc.tsx->  if one entry is added inn historoy new option should be disabled
+1st step fetch inc data from db
+
+if no data present then do foirmdata stuff

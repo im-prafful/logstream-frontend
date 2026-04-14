@@ -318,8 +318,8 @@ const View_Incidents = () => {
                   <button
                     onClick={() => { 
                       sessionStorage.setItem('Current Incident',JSON.stringify(selectedIncident))
-                      
-                      navigate('/editInc') 
+                      console.log(`${selectedIncident.incident_id}`)
+                      navigate('/editInc',{state:{id:selectedIncident.incident_id}}) 
 
                     }}
                     className="mt-2 w-full inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg active:scale-[0.98] cursor-pointer"

@@ -8,6 +8,7 @@ import { LoginRouteWrapper, SignupRouteWrapper } from './Components/routeWrapper
 import { UserDisp } from "./pages/userDashboard"
 import { AccessControl } from './Components/AccessControl'
 import ExploreClusters from './pages/ExploreClusters'
+import About from './pages/About'
 import { AuthProvider } from './context/AuthContext'
 import AccessDenied from './Components/AccessDenied'
 import View_Incidents from './Components/View_Incidents'
@@ -49,6 +50,14 @@ const router = createBrowserRouter([
   {
     path: "/access-denied",
     element: <AccessDenied />
+  },
+  {
+    path: "/about",
+    element: (
+      <AccessControl>
+        <About />
+      </AccessControl>
+    )
   },
   {
     path: "/incidents",

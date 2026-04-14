@@ -1,20 +1,80 @@
 import React, { useEffect, useState, type ChangeEvent } from "react";
 import { ArrowLeft, FilePenLine } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../hooks/useAuth";
 
 const EditIncidents = () => {
   const navigate = useNavigate();
+  const location = useLocation()
+  let incid  = location.state.id
+  const {token} = useAuth()
+
+
   const [formData, setFormData] = useState({
-    state: "New",
-    role: "Sre",
+    state: "",
+    role: "",
     assigned_to: "",
-    message: "",
-  });
+    message: ""
+  })
+
+  useEffect(() => {
+    const fetchInc = async () => {
+      try {
+        const response = await axios.get(
+          `https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/incident/${incid}`,
+          {
+            headers:{
+              Authorization:`Bearer ${token}`
+            }
+          }
+        );
+
+        const data = response.data;
+        console.log(response.data)
+        if (!data) {
+          // fallback default
+          setFormData({
+            state: "New",
+            role: "Sre",
+            assigned_to: "",
+            message: "",
+          });
+        } else {
+          // populate from API (adjust fields based on your API)
+          setFormData({
+            state: data.state || "New",
+            role: data.role || "Sre",
+            assigned_to: data.assigned_to || "",
+            message: data.message || "",
+          });
+        }
+      } catch (e) {
+        console.error(e);
+
+        // fallback on error
+        setFormData({
+          state: "New",
+          role: "Sre",
+          assigned_to: "",
+          message: "",
+        });
+      }
+    };
+
+    if (incid) {
+      fetchInc();
+    }
+  }, []);
+
+
+  const [disableNewOption, setDisableNewOption] = useState(false);
+  const [isIncidentClosed, setIsIncidentClosed] = useState(false);
 
   const handleChange = (
     e: ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>
   ) => {
+    if (isIncidentClosed) return;
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -22,21 +82,40 @@ const EditIncidents = () => {
     }));
   };
 
-    const handleSave=()=>{
-      console.log("Form data:", formData);
+  const handleSave = () => {
+
+    setDisableNewOption(true);//new disabled
+
+    //if resolved is selected as an option
+    if (formData.state.toLowerCase() == 'resolved') {
+      //automatically become in-progress
+      setFormData((prev) => ({
+        ...prev,
+        state: "Resolved",
+      }));
+      console.log("Form data:", { ...formData, state: "Resoved" });
     }
 
-    useEffect(()=>{
-        const fetchInc=async()=>{
-            try{
-                let response=await axios.get()
-            }catch(e){
+    else {
+      //automatically become in-progress
+      setFormData((prev) => ({
+        ...prev,
+        state: "Inprogress",
+      }));
+      console.log("Form data:", { ...formData, state: "Inprogress" });
+    }
 
-            }
-        }
+  }
 
-        fetchInc()
-    },[])
+  const handleResolve = () => {
+    setDisableNewOption(true);
+    setFormData((prev) => ({
+      ...prev,
+      state: "Resolved",
+    }));
+    setIsIncidentClosed(true);
+  };
+
 
 
   return (
@@ -72,9 +151,10 @@ const EditIncidents = () => {
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
+                  disabled={isIncidentClosed}
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-800 outline-none transition focus:ring-2 focus:ring-indigo-500"
                 >
-                  <option>New</option>
+                  <option disabled={disableNewOption}>New</option>
                   <option>Inprogress</option>
                   <option>Resolved</option>
                 </select>
@@ -89,6 +169,7 @@ const EditIncidents = () => {
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
+                  disabled={isIncidentClosed}
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-800 outline-none transition focus:ring-2 focus:ring-indigo-500"
                 >
                   <option>Sre</option>
@@ -108,6 +189,7 @@ const EditIncidents = () => {
                 type="text"
                 value={formData.assigned_to}
                 onChange={handleChange}
+                disabled={isIncidentClosed}
                 placeholder="Enter assignee name"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-800 outline-none transition focus:ring-2 focus:ring-indigo-500"
               />
@@ -123,6 +205,7 @@ const EditIncidents = () => {
                 rows={4}
                 value={formData.message}
                 onChange={handleChange}
+                disabled={isIncidentClosed}
                 placeholder="Type any message for the user..."
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-800 outline-none transition focus:ring-2 focus:ring-indigo-500 resize-y"
               />
@@ -131,7 +214,8 @@ const EditIncidents = () => {
             <div className="mt-2 flex items-center justify-between gap-3">
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:from-indigo-700 hover:to-blue-700 cursor-pointer"
+                disabled={isIncidentClosed}
+                className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:from-indigo-700 hover:to-blue-700 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 onClick={handleSave}
               >
                 Save Changes
@@ -139,7 +223,9 @@ const EditIncidents = () => {
 
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:from-emerald-700 hover:to-green-700 cursor-pointer"
+                disabled={isIncidentClosed}
+                className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:from-emerald-700 hover:to-green-700 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                onClick={handleResolve}
               >
                 Resolve
               </button>
@@ -149,7 +235,7 @@ const EditIncidents = () => {
       </div>
 
       <div>
-            <h2>View Incident History</h2>
+        <h2>View Incident History</h2>
 
       </div>
 
