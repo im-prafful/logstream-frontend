@@ -51,7 +51,9 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
 
   const navigate = useNavigate();
 
-  const fetchData = async () => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
     try {
       console.log(loginData)
       if (!loginData.captcha) {
@@ -68,8 +70,9 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
 
       console.log(response.data);
 
+      // We MUST use 'data: userData' here because the backend returns an object like: { message: '...', data: {...}, token: '...' }
+      // This translates to English as: "Find the property named data inside response.data, but save it into a brand new variable called userData."
       const { data: userData, token } = response.data;
-
 
       setTimeout(() => {
         login(userData, token);
@@ -77,11 +80,10 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
       }, 2000);
 
     } catch (e: any) {
-
       if (e.response && e.response.status === 401) {
         alert("Invalid Email or Password or role");
       }
-      else if (e.response.status === 400) {
+      else if (e.response && e.response.status === 400) {
         // This catches the CAPTCHA failure message from the backend
         alert(e.response.data.message || "Login failed due to validation issue.");
       }
@@ -93,13 +95,14 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
     }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    fetchData();
-  }
-
   const handleGuestLogin = () => {
-    console.log("Guest Login Triggered");
+    setLoginData((prev) => ({
+      ...prev,
+      email: "guest@logstream.com",
+      password: "GuestDemo123!",
+      role: "dev"
+    }));
+    alert("Guest credentials auto-filled! Please complete the Captcha to continue.");
   };
 
   return (

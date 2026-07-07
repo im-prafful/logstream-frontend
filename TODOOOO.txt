@@ -1,3 +1,3 @@
-1st step fetch inc data from db
+next up->
 
-if no data present then do foirmdata stuff
+incident service now thingy

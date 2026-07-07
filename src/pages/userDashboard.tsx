@@ -14,6 +14,8 @@ export const UserDisp = () => {
     const [logsPerCategory, setLogsPerCategory] = useState([])
     const [loading, setLoading] = useState(true)
     const [logsPerCluster, setLogsPerCluster] = useState([])
+    const [subscribeEmail, setSubscribeEmail] = useState("")
+    const [isSubscribing, setIsSubscribing] = useState(false)
 
     const navigate = useNavigate()
     const {user}=useAuth()
@@ -98,6 +100,28 @@ export const UserDisp = () => {
         }
         return colors[level?.toLowerCase()] || '#f3f4f6'
     }
+
+    const handleSubscribe = async (e) => {
+        e.preventDefault();
+        if (!subscribeEmail) return;
+        
+        setIsSubscribing(true);
+        const token = localStorage.getItem("JWT");
+        try {
+            await axios.post(
+                'https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/subscribe',
+                { emailAddress: subscribeEmail },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            alert("Subscription request sent! Please check your email to confirm.");
+            setSubscribeEmail("");
+        } catch (error) {
+            console.error("Subscribe Error:", error);
+            alert("Failed to subscribe. Please try again.");
+        } finally {
+            setIsSubscribing(false);
+        }
+    };
 
     useEffect(() => {
         const fetchLogsFnc = async () => {
@@ -525,10 +549,7 @@ export const UserDisp = () => {
 
             <div className="mt-14">
                 <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        console.log("Email");
-                    }}
+                    onSubmit={handleSubscribe}
                     className="w-full max-w-md mx-auto bg-white p-5 rounded-2xl shadow-lg border border-gray-200"
                 >
                     {/* Top Text */}
@@ -539,16 +560,24 @@ export const UserDisp = () => {
                     {/* Input + Button Row */}
                     <div className="flex items-center gap-4">
                         <input
-                            type="text"
+                            type="email"
+                            value={subscribeEmail}
+                            onChange={(e) => setSubscribeEmail(e.target.value)}
                             placeholder="Enter your email"
                             className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                            required
                         />
 
                         <button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-md shadow-blue-200"
+                            disabled={isSubscribing}
+                            className={`font-bold px-6 py-2 rounded-lg transition-all shadow-md ${
+                                isSubscribing 
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-blue-600 hover:bg-blue-700 text-white transform hover:scale-105 active:scale-95 shadow-blue-200'
+                            }`}
                         >
-                            Submit
+                            {isSubscribing ? 'Subscribing...' : 'Subscribe'}
                         </button>
                     </div>
                 </form>

@@ -14,7 +14,7 @@ interface FormData {
 
 const bannedWordList = [
   "admin", "administrator", "root", "system", "sys", "null", "void",
-  "test", "testing", "guest", "user", "default",
+  "test", "testing", "default",
   "password", "pass", "pwd", "qwerty", "letmein", "access",
   "owner", "master", "superuser",
   "fuck", "shit", "bitch", "asshole", "idiot"
@@ -99,18 +99,18 @@ const SignupForm: React.FC<Props> = ({ onClose }) => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!validate()) return;
 
     try {
       const response = await axios.post(
-        'https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/signup',{
-           email: formData.email,
-          name: formData.name,
-          password: formData.password,
-          role:formData.role
-        }
-        
+        'https://9swlhzogxj.execute-api.ap-south-1.amazonaws.com/api/v1/signup', {
+        email: formData.email,
+        name: formData.name,
+        password: formData.password,
+        role: formData.role
+      }
+
       );
       console.log(response.data);
       alert('User successfully registered!');

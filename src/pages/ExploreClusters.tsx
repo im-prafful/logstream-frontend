@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { ChevronDown, ChevronRight, AlertCircle, Activity, Clock, ArrowLeft, Layers, TrendingUp } from 'lucide-react'
+import { ChevronDown, ChevronRight, AlertCircle, Activity, Clock, ArrowLeft, Layers, TrendingUp, Server } from 'lucide-react'
+import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 const ExploreClusters = () => {
   const [logsPerCluster, setLogsPerCluster] = useState([])
-  const [expandedClusters, setExpandedClusters] = useState(new Set())//A Set that stores which clusters are expanded..If cluster ID is in the set → details are visible
-  const [clusterLogs, setClusterLogs] = useState({})//This avoids refetching logs again and again
+  const [expandedClusters, setExpandedClusters] = useState(new Set())
+  const [clusterLogs, setClusterLogs] = useState({})
+  const [clusterChartData, setClusterChartData] = useState({})
   const [loadingLogs, setLoadingLogs] = useState({})
 
   useEffect(() => {
@@ -26,7 +28,7 @@ const ExploreClusters = () => {
   }
 
   const fetchClusterLogs = async (clusterId) => {
-    if (clusterLogs[clusterId]) return//If logs already exist → don’t refetch...This is caching logic
+    if (clusterLogs[clusterId]) return
 
     setLoadingLogs(prev => ({ ...prev, [clusterId]: true }))
 
@@ -43,6 +45,10 @@ const ExploreClusters = () => {
       setClusterLogs(prev => ({
         ...prev,
         [clusterId]: data.logs || []
+      }))
+      setClusterChartData(prev => ({
+        ...prev,
+        [clusterId]: data.chartData || []
       }))
     } catch (err) {
       console.error(`Error fetching logs for cluster ${clusterId}:`, err)
@@ -84,348 +90,217 @@ const ExploreClusters = () => {
     return colors[level?.toLowerCase()] || '#f3f4f6'
   }
 
-  // Determine if cluster is anomalous (e.g., if log count > 100)
-  const isAnomalous = (logCount) => {
-    return parseInt(logCount) > 100
-  }
-
-  // Get cloud size based on log count
-  const getCloudSize = (logCount) => {
-    const count = parseInt(logCount)
-    if (count > 200) return 'cloud-xl'
-    if (count > 100) return 'cloud-lg'
-    if (count > 50) return 'cloud-md'
-    return 'cloud-sm'
-  }
-
-  // Get random position for clouds
-  const getCloudStyle = (index, total) => {
-    const positions = [
-      { top: '10%', left: '5%' },
-      { top: '15%', left: '30%' },
-      { top: '8%', left: '60%' },
-      { top: '30%', left: '15%' },
-      { top: '35%', left: '70%' },
-      { top: '50%', left: '10%' },
-      { top: '55%', left: '45%' },
-      { top: '52%', left: '80%' },
-      { top: '70%', left: '25%' },
-      { top: '75%', left: '65%' },
-      { top: '20%', left: '85%' },
-      { top: '65%', left: '5%' },
-    ]
-    return positions[index % positions.length]
-  }
+  const isAnomalous = (logCount) => parseInt(logCount) > 100
 
   const totalLogs = logsPerCluster.reduce((sum, cluster) => 
     sum + parseInt(cluster.total_logs_per_cluster), 0
   )
 
+  const processedClusters = logsPerCluster.filter(c => c.cluster_id !== null)
+  const unprocessedData = logsPerCluster.find(c => c.cluster_id === null)
+  const unprocessedCount = unprocessedData ? parseInt(unprocessedData.total_logs_per_cluster) : 0
+
   if (logsPerCluster.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading cluster data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading cluster data...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-
-
-
-
-
-
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 py-5 sticky top-0 z-50 shadow-sm">
+    <div className="min-h-screen bg-gray-50">
+      
+      {/* Clean, Professional Header */}
+      <header className="bg-white border-b border-gray-200 px-8 py-5 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <button
               onClick={() => window.history.back()}
-              className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors"
+              className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="font-semibold">Back to Dashboard</span>
+              <span className="font-semibold text-sm">Dashboard</span>
             </button>
             <div className="h-6 w-px bg-gray-300"></div>
             <div className="flex items-center gap-3">
-              <Layers className="w-6 h-6 text-purple-600" />
-              <h1 className="text-2xl font-bold text-gray-800">Cluster Universe</h1>
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Layers className="w-5 h-5 text-blue-600" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-800 tracking-tight">Explore Clusters</h1>
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="text-sm">
-              <span className="text-gray-500">Total Logs: </span>
-              <span className="font-bold text-purple-600 text-lg">{totalLogs}</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              <div className="flex items-center gap-2 bg-green-100 px-3 py-1.5 rounded-full">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span className="font-semibold text-green-700">Normal</span>
-              </div>
-              <div className="flex items-center gap-2 bg-red-100 px-3 py-1.5 rounded-full">
-                <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                <span className="font-semibold text-red-700">High Volume</span>
-              </div>
+            <div className="text-sm bg-gray-100 px-4 py-2 rounded-lg font-medium text-gray-700">
+              Total Analyzed: <span className="font-bold text-blue-600 ml-1">{totalLogs}</span>
             </div>
           </div>
         </div>
       </header>
 
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-8 py-10">
 
+        {/* Warning Banner for Unprocessed Logs */}
+        {unprocessedCount > 0 && (
+          <div className="mb-8 bg-yellow-50 border border-yellow-200 rounded-xl p-6 shadow-sm flex items-start gap-4">
+            <div className="p-2 bg-yellow-100 rounded-lg shrink-0 mt-1">
+              <AlertCircle className="w-6 h-6 text-yellow-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-yellow-800 mb-1">
+                Processing Pipeline Active
+              </h3>
+              <p className="text-yellow-700 font-medium">
+                <span className="font-bold text-yellow-900">{unprocessedCount} logs</span> are currently pending ML processing. The machine learning model runs in batches, so this graph is subject to change once they are processed.
+              </p>
+            </div>
+          </div>
+        )}
 
-
-
-
-
-
-      {/* Cloud Visualization */}
-      <div className="relative min-h-[600px] overflow-hidden py-12">
-        <div className="max-w-7xl mx-auto px-8">
-          <h2 className="text-xl font-bold text-gray-700 mb-8 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-purple-600" />
-            Cluster Map - {logsPerCluster.length} Active Clusters
+        <div className="border-t border-gray-200 pt-10">
+          <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-gray-400" />
+            Cluster Details
           </h2>
           
-          <div className="relative w-full h-[500px]">
-            {logsPerCluster.map((cluster, idx) => {
-              const style = getCloudStyle(idx, logsPerCluster.length)
-              const size = getCloudSize(cluster.total_logs_per_cluster)
+          <div className="space-y-4">
+            {processedClusters.map((cluster) => {
+              const isExpanded = expandedClusters.has(cluster.cluster_id)
+              const logs = clusterLogs[cluster.cluster_id] || []
+              const chartData = clusterChartData[cluster.cluster_id] || []
+              const isLoadingLogs = loadingLogs[cluster.cluster_id]
               const anomaly = isAnomalous(cluster.total_logs_per_cluster)
-              
+
               return (
                 <div
                   key={cluster.cluster_id}
-                  className={`absolute cloud ${size} cursor-pointer transition-all duration-300 hover:scale-110 hover:z-10`}
-                  style={style}
-                  onClick={() => toggleCluster(cluster.cluster_id)}
+                  className={`border rounded-xl overflow-hidden transition-all bg-white ${
+                    anomaly ? 'border-red-200' : 'border-gray-200'
+                  }`}
                 >
-                  <div className={`cloud-content ${anomaly ? 'cloud-anomaly' : 'cloud-normal'}`}>
-                    <div className="text-center">
-                      <div className="text-3xl font-black text-gray-700 mb-1">
-                        #{cluster.cluster_id}
+                  <div
+                    onClick={() => toggleCluster(cluster.cluster_id)}
+                    className="p-5 cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="text-gray-400">
+                        {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                       </div>
-                      <div className="text-xs font-bold text-gray-500 uppercase">
-                        {cluster.total_logs_per_cluster} logs
-                      </div>
-                      {anomaly && (
-                        <div className="mt-2 flex justify-center">
-                          <AlertCircle className="w-5 h-5 text-red-500 animate-pulse" />
-                        </div>
-                      )}
+                      
+                      <div className={`w-3 h-3 rounded-full ${anomaly ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 'bg-blue-500'}`}></div>
+                      
+                      <span className="font-semibold text-gray-800">
+                        Cluster #{cluster.cluster_id}
+                      </span>
+                    </div>
+
+                    <div className="text-sm font-medium text-gray-500">
+                      <span className={anomaly ? 'text-red-600 font-bold' : 'text-gray-800 font-bold'}>
+                        {cluster.total_logs_per_cluster}
+                      </span> logs
                     </div>
                   </div>
+
+                  {isExpanded && (
+                    <div className="border-t border-gray-100 bg-gray-50 p-6">
+                      {isLoadingLogs ? (
+                        <div className="flex items-center justify-center py-6">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          
+                          {/* Mini Line Chart */}
+                          {chartData.length > 0 && (
+                            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm h-48 mb-6">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData}>
+                                  <XAxis 
+                                    dataKey="date" 
+                                    hide={false} 
+                                    tickFormatter={(val) => {
+                                      const d = new Date(val);
+                                      return `${d.getMonth()+1}/${d.getDate()}`;
+                                    }}
+                                    tick={{ fontSize: 12, fill: '#9ca3af' }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                  />
+                                  <Tooltip 
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    labelStyle={{ fontWeight: 'bold', color: '#374151' }}
+                                  />
+                                  <Line 
+                                    type="monotone" 
+                                    dataKey="count" 
+                                    stroke={anomaly ? '#ef4444' : '#3b82f6'} 
+                                    strokeWidth={3} 
+                                    dot={{ r: 4, fill: anomaly ? '#ef4444' : '#3b82f6', strokeWidth: 0 }} 
+                                    activeDot={{ r: 6 }} 
+                                  />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          )}
+
+                          <div className="space-y-3">
+                          {logs.length === 0 ? (
+                            <div className="text-center py-4 text-gray-400 text-sm">
+                              No recent logs found in this cluster.
+                            </div>
+                          ) : (
+                            logs.map((log) => (
+                              <div
+                                key={log.log_id}
+                                className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:border-blue-200 transition-colors"
+                              >
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className="text-[10px] font-bold uppercase px-2 py-1 rounded"
+                                      style={{
+                                        color: getLevelColor(log.level),
+                                        backgroundColor: getLevelBgColor(log.level)
+                                      }}
+                                    >
+                                      {log.level}
+                                    </span>
+                                    <span className="text-xs text-gray-400 font-mono">
+                                      {log.log_id}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-xs text-gray-500 font-medium">
+                                    <Clock className="w-3 h-3" />
+                                    {formatTimestamp(log.timestamp)}
+                                  </div>
+                                </div>
+                                <div className="text-sm text-gray-700 font-mono leading-relaxed">
+                                  {log.message}
+                                </div>
+                                {log.source && (
+                                  <div className="mt-3 text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded-md inline-block">
+                                    SOURCE: {log.source}
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })}
           </div>
         </div>
-      </div>
 
-
-
-
-
-
-
-      {/* Detailed List View */}
-      <div className="max-w-7xl mx-auto px-8 pb-12">
-        <h2 className="text-xl font-bold text-gray-700 mb-6">Detailed Cluster Analysis</h2>
-        <div className="space-y-3">
-          {logsPerCluster.map((cluster) => {
-            const isExpanded = expandedClusters.has(cluster.cluster_id)
-            const logs = clusterLogs[cluster.cluster_id] || []
-            const isLoadingLogs = loadingLogs[cluster.cluster_id]
-            const anomaly = isAnomalous(cluster.total_logs_per_cluster)
-
-            return (
-              <div
-                key={cluster.cluster_id}
-                className={`border-2 rounded-xl overflow-hidden transition-all bg-white ${
-                  anomaly ? 'border-red-300 bg-red-50/30' : 'border-green-300 bg-green-50/30'
-                }`}
-              >
-                <div
-                  onClick={() => toggleCluster(cluster.cluster_id)}
-                  className="p-5 cursor-pointer hover:bg-gray-50/50 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1">
-                      {isExpanded ? (
-                        <ChevronDown className="w-5 h-5 text-gray-600" />
-                      ) : (
-                        <ChevronRight className="w-5 h-5 text-gray-600" />
-                      )}
-
-                      <div className={`w-4 h-4 rounded-full ${anomaly ? 'bg-red-500' : 'bg-green-500'}`}></div>
-
-                      <span className="font-mono text-lg font-bold text-gray-700">
-                        Cluster #{cluster.cluster_id}
-                      </span>
-
-                      {anomaly && (
-                        <span className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">
-                          <AlertCircle className="w-3 h-3" />
-                          HIGH VOLUME
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Activity className="w-4 h-4 text-gray-500" />
-                        <span className="font-bold text-gray-700 text-lg">{cluster.total_logs_per_cluster}</span>
-                        <span className="text-gray-500">logs today</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {isExpanded && (
-                  <div className="border-t border-gray-200 bg-gray-50/50">
-                    {isLoadingLogs ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                      </div>
-                    ) : (
-                      <div className="p-5 space-y-3">
-                        {logs.length === 0 ? (
-                          <div className="text-center py-4 text-gray-500">
-                            Click to load top 10 logs from this cluster
-                          </div>
-                        ) : (
-                          logs.map((log) => (
-                            <div
-                              key={log.log_id}
-                              className="bg-white p-4 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <span
-                                    className="text-xs font-bold uppercase px-2 py-1 rounded"
-                                    style={{
-                                      color: getLevelColor(log.level),
-                                      backgroundColor: getLevelBgColor(log.level)
-                                    }}
-                                  >
-                                    {log.level}
-                                  </span>
-                                  <span className="text-xs text-gray-500 font-mono">
-                                    ID: {log.log_id}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-1 text-xs text-gray-500">
-                                  <Clock className="w-3 h-3" />
-                                  {formatTimestamp(log.timestamp)}
-                                </div>
-                              </div>
-                              <div className="text-sm text-gray-800 font-mono">
-                                {log.message}
-                              </div>
-                              {log.source && (
-                                <div className="mt-2 text-xs text-gray-500">
-                                  Source: {log.source}
-                                </div>
-                              )}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      <style>{`
-        .cloud {
-          animation: float 6s ease-in-out infinite;
-        }
-
-        .cloud-sm {
-          width: 120px;
-          height: 80px;
-        }
-
-        .cloud-md {
-          width: 150px;
-          height: 100px;
-        }
-
-        .cloud-lg {
-          width: 180px;
-          height: 120px;
-        }
-
-        .cloud-xl {
-          width: 220px;
-          height: 140px;
-        }
-
-        .cloud-content {
-          width: 100%;
-          height: 100%;
-          border-radius: 100px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-          transition: all 0.3s ease;
-        }
-
-        .cloud-normal {
-          background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%);
-          border: 3px solid #bae6fd;
-        }
-
-        .cloud-anomaly {
-          background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
-          border: 3px solid #fca5a5;
-          animation: pulse-red 2s ease-in-out infinite;
-        }
-
-        .cloud:hover .cloud-content {
-          transform: translateY(-8px);
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        }
-
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-15px);
-          }
-        }
-
-        @keyframes pulse-red {
-          0%, 100% {
-            box-shadow: 0 10px 40px rgba(239, 68, 68, 0.2);
-          }
-          50% {
-            box-shadow: 0 10px 40px rgba(239, 68, 68, 0.4);
-          }
-        }
-
-        .cloud:nth-child(2n) {
-          animation-delay: 1s;
-        }
-
-        .cloud:nth-child(3n) {
-          animation-delay: 2s;
-        }
-
-        .cloud:nth-child(4n) {
-          animation-delay: 3s;
-        }
-      `}</style>
+      </main>
     </div>
   )
 }

@@ -1,28 +1,10 @@
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect } from 'react';
 
-export interface User {
-  user_id: string;
-  email: string;
-  full_name: string;
-  role: string;
-  permissions: string[];
-}
+export const AuthContext = createContext(null);
 
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  login: (user: User, token: string) => void;
-  logout: () => void;
-  hasPermission: (permission: string) => boolean;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
-
-export const AuthContext = createContext<AuthContextType | null>(null);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -42,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = (userData: User, token: string) => {
+  const login = (userData, token) => {
     setUser(userData);
     setToken(token);
     localStorage.setItem('JWT', token);
@@ -56,8 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('USER_DATA');
   };
 
-  const hasPermission = (permission: string) =>
-    !!user?.permissions?.includes(permission);
 
   return (
     <AuthContext.Provider
@@ -66,7 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         login,
         logout,
-        hasPermission,
         isAuthenticated: !!token,
         isLoading,
       }}
