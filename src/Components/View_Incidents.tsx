@@ -20,9 +20,10 @@ interface Incident {
 
 const View_Incidents = () => {
   const navigate = useNavigate()
-  const { token } = useAuth()
+  const { token, user } = useAuth()
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('view')
+  const [showMyIncidents, setShowMyIncidents] = useState(false)
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
   const [isViewing, setIsViewing] = useState(false)
@@ -182,6 +183,10 @@ const View_Incidents = () => {
     return parsed.toLocaleString()
   }
 
+  const displayedIncidents = showMyIncidents 
+    ? incidents.filter(inc => inc.assigned_to === user?.user_id)
+    : incidents;
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,#e0f2fe_0%,#f8fafc_40%,#eef2ff_100%)] pb-20">
 
@@ -244,7 +249,18 @@ const View_Incidents = () => {
         {activeTab === 'view' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <section className="lg:col-span-2 bg-white border rounded-xl shadow-sm p-5">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Incident List</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">Incident List</h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">My Incidents Only</span>
+                  <button 
+                    onClick={() => setShowMyIncidents(!showMyIncidents)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${showMyIncidents ? 'bg-blue-600' : 'bg-gray-200'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showMyIncidents ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+              </div>
 
               {isViewing && (
                 <p className="text-sm text-gray-500 mb-4">Loading incidents...</p>
@@ -254,13 +270,13 @@ const View_Incidents = () => {
                 <p className="text-sm text-red-600 mb-4">{viewError}</p>
               )}
 
-              {!isViewing && incidents.length === 0 ? (
+              {!isViewing && displayedIncidents.length === 0 ? (
                 <p className="text-gray-400 py-10 text-center">
                   No incidents found.
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {incidents.map((incident) => (
+                  {displayedIncidents.map((incident) => (
                     <div
                       key={incident.incident_id}
                       className="rounded-xl p-4 md:p-5 flex items-center justify-between gap-4 border border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-sm hover:shadow-md hover:border-blue-200 transition-all"

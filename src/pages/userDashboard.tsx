@@ -162,10 +162,7 @@ export const UserDisp = () => {
     }
 
 
-    const handleLogout = () => {
-        localStorage.removeItem("JWT")
-        window.location.href = "/login"
-    }
+
 
     const totalLogs = logsPerCategory.reduce((sum, cat) => sum + parseInt(cat.tc), 0)
 
@@ -305,14 +302,7 @@ export const UserDisp = () => {
                     </motion.button>
 
 
-                    <motion.button
-                        onClick={handleLogout}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 hover:text-red-500 transition-colors"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        <LogOut className="w-4 h-4" /> Logout
-                    </motion.button>
+
                 </div>
             </motion.header>
             <div className="max-w-7xl mx-auto px-6 mt-6">
