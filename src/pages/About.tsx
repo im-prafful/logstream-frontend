@@ -38,7 +38,7 @@ const About = () => {
             To view the complete, high-resolution system architecture and data flow diagrams, please visit our official GitHub repository.
           </p>
           <a 
-            href="#" 
+            href="https://github.com/im-prafful/logstream-frontend/tree/main/public" 
             target="_blank" 
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition-colors"
