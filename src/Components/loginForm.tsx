@@ -171,7 +171,7 @@ const LoginForm: React.FC<Props> = ({ onClose }) => {
         </div>
 
         <ReCAPTCHA
-          sitekey="6LdeYiwsAAAAADIiqLK3DSY_tgk6ZhcBgqAp99n-"
+          sitekey="6Le75k4tAAAAAOZeF_bWnVlhQFn9b57b0_cXTF1M"
           onChange={handleCaptcha}
         />
 
